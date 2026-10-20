@@ -1,50 +1,54 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { User } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { ApiError } from "@/lib/api/client";
+
+interface LocationState {
+  from?: string;
+}
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, login, register } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const redirectTo = (location.state as LocationState | null)?.from || "/";
+
   useEffect(() => {
-    // Check if user is already logged in
-    const userSession = localStorage.getItem('userSession');
-    if (userSession) {
-      navigate("/");
+    if (isAuthenticated) {
+      navigate(redirectTo, { replace: true });
     }
-  }, [navigate]);
+  }, [isAuthenticated, navigate, redirectTo]);
+
+  const describeError = (error: unknown): string => {
+    if (error instanceof ApiError) {
+      if (error.code === "INVALID_CREDENTIALS") return "Email ou mot de passe incorrect";
+      if (error.code === "EMAIL_ALREADY_EXISTS") return "Cet email est déjà utilisé";
+      if (error.code === "VALIDATION_ERROR") return "Veuillez vérifier les informations saisies";
+      return error.message;
+    }
+    return "Une erreur est survenue. Vérifiez que le serveur est démarré.";
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      // Get stored users
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const user = users.find((u: any) => u.email === email && u.password === password);
-
-      if (user) {
-        const session = {
-          email: user.email,
-          name: user.name,
-          id: user.id
-        };
-        localStorage.setItem('userSession', JSON.stringify(session));
-        toast.success("Connexion réussie!");
-        navigate("/");
-      } else {
-        toast.error("Email ou mot de passe incorrect");
-      }
+      await login({ email, password });
+      toast.success("Connexion réussie!");
+      navigate(redirectTo, { replace: true });
     } catch (error) {
-      toast.error("Une erreur est survenue");
+      toast.error(describeError(error));
     } finally {
       setLoading(false);
     }
@@ -53,42 +57,12 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      // Get stored users
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      
-      // Check if user already exists
-      if (users.find((u: any) => u.email === email)) {
-        toast.error("Cet email est déjà utilisé");
-        setLoading(false);
-        return;
-      }
-
-      // Create new user
-      const newUser = {
-        id: Date.now().toString(),
-        email,
-        password,
-        name: name || email.split('@')[0],
-        createdAt: new Date().toISOString()
-      };
-
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-
-      // Auto login
-      const session = {
-        email: newUser.email,
-        name: newUser.name,
-        id: newUser.id
-      };
-      localStorage.setItem('userSession', JSON.stringify(session));
-      
+      await register({ email, password, name: name || email.split("@")[0] });
       toast.success("Compte créé avec succès!");
-      navigate("/");
+      navigate(redirectTo, { replace: true });
     } catch (error) {
-      toast.error("Une erreur est survenue");
+      toast.error(describeError(error));
     } finally {
       setLoading(false);
     }
@@ -139,11 +113,7 @@ const Auth = () => {
                   required
                 />
               </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Connexion..." : "Se connecter"}
               </Button>
             </form>
@@ -181,14 +151,11 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                 />
+                <p className="text-xs text-muted-foreground">Au moins 8 caractères</p>
               </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Création..." : "Créer un compte"}
               </Button>
             </form>

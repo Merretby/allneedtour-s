@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, User, Heart, ShoppingCart, Tag, Package, MessageSquare, MapPin, Gift, CreditCard, Store, Clock, Shield, Bell, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -11,11 +11,14 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/lib/api/hooks";
 
 const Header = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [cartCount, setCartCount] = useState(0);
+  const { user, isAuthenticated, logout } = useAuth();
+  const { data: cart } = useCart();
+  const cartCount = (cart ?? []).reduce((sum, item) => sum + item.quantity, 0);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   let hoverTimeout: NodeJS.Timeout | null = null;
@@ -31,39 +34,8 @@ const Header = () => {
     }, 200);
   };
 
-  useEffect(() => {
-    // Check if user is logged in via localStorage
-    const userSession = localStorage.getItem('userSession');
-    if (userSession) {
-      setUser(JSON.parse(userSession));
-    }
-    
-    // Update cart count from localStorage
-    updateCartCount();
-    
-    // Listen for cart updates
-    const handleStorageChange = () => {
-      updateCartCount();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('cartUpdated', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('cartUpdated', handleStorageChange);
-    };
-  }, []);
-
-  const updateCartCount = () => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const total = cart.reduce((sum: number, item: any) => sum + item.quantity, 0);
-    setCartCount(total);
-  };
-
   const handleSignOut = () => {
-    localStorage.removeItem('userSession');
-    setUser(null);
+    logout();
     toast.success("Déconnexion réussie");
     navigate("/");
   };
@@ -114,7 +86,7 @@ const Header = () => {
               </Badge>
             </button>
             
-            {user ? (
+            {isAuthenticated ? (
               <DropdownMenu open={profileOpen} onOpenChange={setProfileOpen}>
                 <DropdownMenuTrigger asChild>
                   <button 
@@ -132,7 +104,7 @@ const Header = () => {
                   onMouseLeave={handleMouseLeave}
                 >
                   <div className="px-3 py-2 border-b">
-                    <p className="font-semibold text-foreground">Bonjour, {user.email?.split('@')[0] || 'hanane'}</p>
+                    <p className="font-semibold text-foreground">Bonjour, {user?.name || user?.email?.split('@')[0] || 'vous'}</p>
                     <p className="text-xs text-muted-foreground">Commandes et Compte</p>
                   </div>
                   

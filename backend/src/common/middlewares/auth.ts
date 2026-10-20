@@ -7,6 +7,7 @@ import { ErrorCodes } from '../errors/error-codes.js';
 export interface JWTPayload {
   userId: string;
   email: string;
+  role?: 'customer' | 'admin';
 }
 
 declare module 'fastify' {

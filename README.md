@@ -1,5 +1,7 @@
 # Monorepo Architecture – Frontend + Backend (Future-Proof)
 
+> **Current implementation note:** the frontend is now wired to the Fastify API with JWT auth, Supabase-backed products, cart, favorites, and orders. For setup and local testing, see [`RUN_LOCALLY.md`](./RUN_LOCALLY.md). The monorepo layout below is a future target and does not describe the current folder structure.
+
 This repository is structured as a **scalable, domain-driven monorepo**, designed to support frontend, backend, shared packages, infrastructure, and team collaboration from day one.
 
 It is suitable for:

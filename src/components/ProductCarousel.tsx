@@ -1,14 +1,7 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "./ProductCard";
-
-interface Product {
-  id: number;
-  image: string;
-  name: string;
-  price: string;
-  oldPrice?: string;
-}
+import type { Product } from "@/lib/api/types";
 
 interface ProductCarouselProps {
   products: Product[];
@@ -43,13 +36,9 @@ const ProductCarousel = ({ products }: ProductCarouselProps) => {
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {products.map((product) => (
-          <a 
-            key={product.id} 
-            href={`/product/${product.id}`}
-            className="flex-none w-[280px] snap-start"
-          >
-            <ProductCard {...product} />
-          </a>
+          <div key={product.id} className="flex-none w-[280px] snap-start">
+            <ProductCard product={product} />
+          </div>
         ))}
       </div>
 

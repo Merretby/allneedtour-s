@@ -5,6 +5,9 @@ import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { calculatePagination, createPaginatedResult, PaginationParams } from '../../common/utils/pagination.js';
 
+const FREE_SHIPPING_THRESHOLD = 60;
+const SHIPPING_FEE = 30;
+
 export class OrdersService {
   constructor(
     private repository: OrdersRepository,
@@ -46,7 +49,9 @@ export class OrdersService {
       }
     }
 
-    const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+    const total = subtotal + shippingFee;
 
     const order = await this.repository.create(userId, total);
 

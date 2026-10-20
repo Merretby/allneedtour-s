@@ -21,4 +21,12 @@ export class AuthController {
     const result = await this.service.login(request.body);
     sendSuccess(reply, result);
   }
+
+  async me(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void> {
+    const user = await this.service.getMe(request.user!.userId);
+    sendSuccess(reply, user);
+  }
 }

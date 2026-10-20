@@ -1,4 +1,5 @@
-import pino from 'pino';
+import { pino } from 'pino';
+import type { FastifyBaseLogger } from 'fastify';
 import { env } from './env.js';
 
 export const logger = pino({
@@ -14,4 +15,4 @@ export const logger = pino({
           },
         }
       : undefined,
-});
+}) as unknown as FastifyBaseLogger;

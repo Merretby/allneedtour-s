@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { OrdersService } from './orders.service.js';
 import { Order } from './orders.repository.js';
 import { sendSuccess, sendCreated } from '../../common/utils/http.js';
+import { AppError } from '../../common/errors/AppError.js';
 
 export class OrdersController {
   constructor(private service: OrdersService) {}
@@ -36,6 +37,9 @@ export class OrdersController {
     request: FastifyRequest<{ Params: { id: string }; Body: { status: Order['status'] } }>,
     reply: FastifyReply
   ): Promise<void> {
+    if (request.user!.role !== 'admin') {
+      throw AppError.forbidden('Admin access required');
+    }
     const userId = request.user!.userId;
     const order = await this.service.updateOrderStatus(userId, request.params.id, request.body.status);
     sendSuccess(reply, order);

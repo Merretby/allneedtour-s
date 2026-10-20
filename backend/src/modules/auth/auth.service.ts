@@ -18,7 +18,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(input.password, 10);
     const user = await this.repository.createUser(input.email, input.name, passwordHash);
 
-    const token = this.generateToken(user.id, user.email);
+    const token = this.generateToken(user.id, user.email, user.role);
 
     const { password_hash, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
@@ -35,15 +35,24 @@ export class AuthService {
       throw AppError.unauthorized('Invalid credentials', ErrorCodes.INVALID_CREDENTIALS);
     }
 
-    const token = this.generateToken(user.id, user.email);
+    const token = this.generateToken(user.id, user.email, user.role);
 
     const { password_hash, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
   }
 
-  private generateToken(userId: string, email: string): string {
-    return jwt.sign({ userId, email }, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN,
+  async getMe(userId: string): Promise<Omit<User, 'password_hash'>> {
+    const user = await this.repository.findUserById(userId);
+    if (!user) {
+      throw AppError.notFound('User not found', ErrorCodes.USER_NOT_FOUND);
+    }
+    const { password_hash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  private generateToken(userId: string, email: string, role: User['role']): string {
+    return jwt.sign({ userId, email, role }, env.JWT_SECRET, {
+      expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
     });
   }
 }

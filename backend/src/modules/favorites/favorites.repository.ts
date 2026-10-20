@@ -13,8 +13,11 @@ export interface FavoriteWithProduct extends Favorite {
     name: string;
     description: string;
     price: number;
+    compare_at_price?: number | null;
     image_url?: string;
     category: string;
+    brand?: string | null;
+    stock?: number;
   };
 }
 
@@ -24,7 +27,7 @@ export class FavoritesRepository {
       .from('favorites')
       .select(`
         *,
-        product:products(id, name, description, price, image_url, category)
+        product:products(id, name, description, price, compare_at_price, image_url, category, brand, stock)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });

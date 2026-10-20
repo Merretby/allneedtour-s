@@ -14,9 +14,14 @@ export class ProductsService {
     return product;
   }
 
-  async getProducts(params: PaginationParams & { category?: string }) {
+  async getProducts(params: PaginationParams & { category?: string; search?: string }) {
     const { page, limit, offset } = calculatePagination(params);
-    const { products, total } = await this.repository.findAll(limit, offset, params.category);
+    const { products, total } = await this.repository.findAll(
+      limit,
+      offset,
+      params.category,
+      params.search
+    );
     return createPaginatedResult(products, total, page, limit);
   }
 

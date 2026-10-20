@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Phone, MapPin, Edit2, Package, Heart } from "lucide-react";
+import { User, Mail, Edit2, Package, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TopBar from "@/components/TopBar";
@@ -8,30 +8,38 @@ import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { useFavorites, useOrders, useUpdateProfile } from "@/lib/api/hooks";
+import { formatPrice, toNumber } from "@/lib/format";
+import { ApiError } from "@/lib/api/client";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
+  const updateProfile = useUpdateProfile();
+  const { data: orders } = useOrders();
+  const { data: favorites } = useFavorites();
+
   const [editing, setEditing] = useState(false);
-  const [profile, setProfile] = useState({
-    name: "Hanane Douch",
-    email: "hanane.douch@example.com",
-    phone: "0660****30",
-    address: "Casablanca, Maroc",
-  });
+  const [name, setName] = useState(user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    setName(user?.name ?? "");
+    setEmail(user?.email ?? "");
+  }, [user]);
 
-  const checkAuth = () => {
-    const userSession = localStorage.getItem('userSession');
-    setUser(userSession ? JSON.parse(userSession) : null);
-  };
+  const orderCount = orders?.data.length ?? 0;
+  const totalSpent = (orders?.data ?? []).reduce((sum, order) => sum + toNumber(order.total), 0);
 
-  const handleSave = () => {
-    setEditing(false);
-    toast.success("Profil mis à jour avec succès");
+  const handleSave = async () => {
+    try {
+      await updateProfile.mutateAsync({ name, email });
+      setEditing(false);
+      toast.success("Profil mis à jour avec succès");
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : "Impossible de mettre à jour le profil");
+    }
   };
 
   return (
@@ -51,8 +59,8 @@ const Profile = () => {
                 <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mb-4">
                   <User className="h-12 w-12 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-foreground">{profile.name}</h2>
-                <p className="text-muted-foreground">{profile.email}</p>
+                <h2 className="text-xl font-bold text-foreground">{user?.name}</h2>
+                <p className="text-muted-foreground">{user?.email}</p>
               </div>
 
               <div className="space-y-3">
@@ -96,12 +104,9 @@ const Profile = () => {
                     Nom complet
                   </label>
                   {editing ? (
-                    <Input
-                      value={profile.name}
-                      onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    />
+                    <Input value={name} onChange={(e) => setName(e.target.value)} />
                   ) : (
-                    <p className="text-foreground font-medium">{profile.name}</p>
+                    <p className="text-foreground font-medium">{user?.name}</p>
                   )}
                 </div>
 
@@ -113,53 +118,26 @@ const Profile = () => {
                   {editing ? (
                     <Input
                       type="email"
-                      value={profile.email}
-                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   ) : (
-                    <p className="text-foreground font-medium">{profile.email}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    <Phone className="inline h-4 w-4 mr-2" />
-                    Téléphone
-                  </label>
-                  {editing ? (
-                    <Input
-                      type="tel"
-                      value={profile.phone}
-                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    />
-                  ) : (
-                    <p className="text-foreground font-medium">{profile.phone}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    <MapPin className="inline h-4 w-4 mr-2" />
-                    Adresse
-                  </label>
-                  {editing ? (
-                    <Input
-                      value={profile.address}
-                      onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                    />
-                  ) : (
-                    <p className="text-foreground font-medium">{profile.address}</p>
+                    <p className="text-foreground font-medium">{user?.email}</p>
                   )}
                 </div>
 
                 {editing && (
                   <div className="flex gap-3">
-                    <Button onClick={handleSave} className="flex-1">
-                      Enregistrer
+                    <Button onClick={handleSave} className="flex-1" disabled={updateProfile.isPending}>
+                      {updateProfile.isPending ? "Enregistrement..." : "Enregistrer"}
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => setEditing(false)}
+                      onClick={() => {
+                        setEditing(false);
+                        setName(user?.name ?? "");
+                        setEmail(user?.email ?? "");
+                      }}
                       className="flex-1"
                     >
                       Annuler
@@ -173,17 +151,17 @@ const Profile = () => {
             <div className="grid md:grid-cols-3 gap-4 mt-6">
               <div className="bg-card rounded-xl p-6 border border-border text-center">
                 <Package className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="text-2xl font-bold text-foreground">3</p>
+                <p className="text-2xl font-bold text-foreground">{orderCount}</p>
                 <p className="text-sm text-muted-foreground">Commandes</p>
               </div>
               <div className="bg-card rounded-xl p-6 border border-border text-center">
                 <Heart className="h-8 w-8 mx-auto mb-2 text-red-500" />
-                <p className="text-2xl font-bold text-foreground">6</p>
+                <p className="text-2xl font-bold text-foreground">{favorites?.length ?? 0}</p>
                 <p className="text-sm text-muted-foreground">Favoris</p>
               </div>
               <div className="bg-card rounded-xl p-6 border border-border text-center">
                 <div className="text-2xl mb-2">💰</div>
-                <p className="text-2xl font-bold text-foreground">1,095 Dhs</p>
+                <p className="text-2xl font-bold text-foreground">{formatPrice(totalSpent)}</p>
                 <p className="text-sm text-muted-foreground">Total dépensé</p>
               </div>
             </div>

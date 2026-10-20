@@ -11,7 +11,7 @@ const envSchema = z.object({
   SUPABASE_SERVICE_KEY: z.string(),
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('7d'),
-  CORS_ORIGINS: z.string().default('http://localhost:5173'),
+  CORS_ORIGINS: z.string().default('http://localhost:1122'),
   RATE_LIMIT_MAX: z.string().default('100'),
   RATE_LIMIT_TIMEWINDOW: z.string().default('60000'),
 });

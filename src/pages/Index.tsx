@@ -12,12 +12,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Globe } from "lucide-react";
 import { Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import productSerum from "@/assets/product-serum.jpg";
-import productPalette from "@/assets/product-palette.jpg";
-import productPerfume from "@/assets/product-perfume.jpg";
-import productCream from "@/assets/product-cream.jpg";
-import productLipstick from "@/assets/product-lipstick.jpg";
-import productMask from "@/assets/product-mask.jpg";
+import { useProducts } from "@/lib/api/hooks";
+import { formatPrice, resolveImageUrl, toNumber } from "@/lib/format";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -26,48 +22,15 @@ const Index = () => {
   const [showProducts, setShowProducts] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
-  // Mock product data with real images
-  const recommendedProducts = [
-    {
-      id: 1,
-      image: productSerum,
-      name: "Sérum Visage Vitamine C - Éclat & Anti-âge",
-      price: "299 Dhs",
-      oldPrice: "399 Dhs",
-    },
-    {
-      id: 2,
-      image: productPalette,
-      name: "Palette Nude Rose Gold - 12 Teintes",
-      price: "249 Dhs",
-    },
-    {
-      id: 3,
-      image: productPerfume,
-      name: "Eau de Parfum Rose Élégance 50ml",
-      price: "349 Dhs",
-      oldPrice: "449 Dhs",
-    },
-    {
-      id: 4,
-      image: productCream,
-      name: "Crème Hydratante Jour & Nuit",
-      price: "199 Dhs",
-    },
-    {
-      id: 5,
-      image: productLipstick,
-      name: "Rouge à Lèvres Mat Longue Tenue",
-      price: "129 Dhs",
-    },
-    {
-      id: 6,
-      image: productMask,
-      name: "Masque Tissu K-Beauty - Lot de 5",
-      price: "149 Dhs",
-      oldPrice: "199 Dhs",
-    },
-  ];
+  const { data, isLoading } = useProducts({ limit: 12 });
+  const recommendedProducts = data?.data ?? [];
+  const deals = recommendedProducts.filter(
+    (product) => toNumber(product.compare_at_price) > toNumber(product.price)
+  );
+  const activeProducts =
+    activeTab === "bestsellers"
+      ? recommendedProducts.slice(0, 4)
+      : (deals.length > 0 ? deals : recommendedProducts).slice(0, 4);
 
   const brands = [
     { name: "MAKEUP BY MARIO", category: "Maquillage" },
@@ -139,6 +102,9 @@ const Index = () => {
           </p>
         </div>
         <ProductCarousel products={recommendedProducts} />
+        {isLoading && (
+          <p className="text-center text-muted-foreground mt-4">Chargement des produits…</p>
+        )}
       </section>
 
       {/* Best-sellers & Deals Section */}
@@ -215,25 +181,28 @@ const Index = () => {
             >
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 px-4">
                 {/* Show 3 products */}
-                {recommendedProducts.slice(0, 3).map((product) => (
+                {activeProducts.slice(0, 3).map((product) => (
                   <a key={product.id} href={`/product/${product.id}`} className="hover-lift">
                     <div className="aspect-square bg-secondary rounded-xl mb-3 overflow-hidden">
                       <img
-                        src={product.image}
+                        src={resolveImageUrl(product.image_url)}
                         alt={product.name}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <h3 className="font-medium text-sm text-foreground line-clamp-2 mb-1">
                       {product.name}
                     </h3>
-                    <p className="font-semibold text-primary">{product.price}</p>
-                    {product.oldPrice && (
-                      <p className="text-sm text-muted-foreground line-through">{product.oldPrice}</p>
+                    <p className="font-semibold text-primary">{formatPrice(product.price)}</p>
+                    {toNumber(product.compare_at_price) > toNumber(product.price) && (
+                      <p className="text-sm text-muted-foreground line-through">
+                        {formatPrice(product.compare_at_price)}
+                      </p>
                     )}
                   </a>
                 ))}
-                
+
                 {/* 4th card with "Savoir plus" */}
                 <div
                   onClick={() => navigate(activeTab === "bestsellers" ? "/category/nouveautes" : "/category/bons-plans")}
@@ -241,7 +210,7 @@ const Index = () => {
                 >
                   <div className="absolute inset-0">
                     <img
-                      src={recommendedProducts[3].image}
+                      src={resolveImageUrl(activeProducts[3]?.image_url ?? activeProducts[0]?.image_url)}
                       alt="Voir plus"
                       className="w-full h-full object-cover"
                     />

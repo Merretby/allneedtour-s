@@ -5,8 +5,10 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  compare_at_price?: number | null;
   stock: number;
   category: string;
+  brand?: string | null;
   image_url?: string;
   created_at: string;
   updated_at: string;
@@ -19,6 +21,8 @@ export interface CreateProductInput {
   stock: number;
   category: string;
   image_url?: string;
+  brand?: string;
+  compare_at_price?: number;
 }
 
 export interface UpdateProductInput {
@@ -28,6 +32,8 @@ export interface UpdateProductInput {
   stock?: number;
   category?: string;
   image_url?: string;
+  brand?: string;
+  compare_at_price?: number;
 }
 
 export class ProductsRepository {
@@ -42,11 +48,23 @@ export class ProductsRepository {
     return data;
   }
 
-  async findAll(limit: number, offset: number, category?: string): Promise<{ products: Product[]; total: number }> {
+  async findAll(
+    limit: number,
+    offset: number,
+    category?: string,
+    search?: string
+  ): Promise<{ products: Product[]; total: number }> {
     let query = supabase.from('products').select('*', { count: 'exact' });
 
     if (category) {
       query = query.eq('category', category);
+    }
+
+    if (search) {
+      const term = search.replace(/[%_,]/g, ' ').trim();
+      if (term) {
+        query = query.or(`name.ilike.%${term}%,brand.ilike.%${term}%,category.ilike.%${term}%`);
+      }
     }
 
     const { data: products, count, error } = await query.range(offset, offset + limit - 1);

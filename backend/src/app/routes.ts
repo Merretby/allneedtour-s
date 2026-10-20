@@ -18,6 +18,7 @@ export async function registerRoutes(fastify: FastifyInstance): Promise<void> {
       await instance.register(cartRouter, { prefix: '/cart' });
       await instance.register(ordersRouter, { prefix: '/orders' });
       await instance.register(favoritesRouter, { prefix: '/favorites' });
+      await instance.register(healthRouter);
     },
     { prefix: '/api/v1' }
   );
