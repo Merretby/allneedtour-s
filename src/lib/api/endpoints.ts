@@ -68,6 +68,30 @@ export const productsApi = {
   remove: (id: string) => apiFetch<void>(`/products/${id}`, { method: "DELETE" }),
 };
 
+export const notificationsApi = {
+  publicKey: () =>
+    apiFetch<{ publicKey: string | null }>("/notifications/public-key", {
+      auth: false,
+    }),
+
+  subscribe: (subscription: PushSubscriptionJSON) =>
+    apiFetch<{ subscribed: boolean }>("/notifications/subscribe", {
+      method: "POST",
+      body: subscription,
+    }),
+
+  unsubscribe: (endpoint: string) =>
+    apiFetch<void>("/notifications/subscribe", {
+      method: "DELETE",
+      body: { endpoint },
+    }),
+
+  test: () =>
+    apiFetch<{ sent: number; failed: number }>("/notifications/test", {
+      method: "POST",
+    }),
+};
+
 export const cartApi = {
   get: () => apiFetch<CartItem[]>("/cart"),
 

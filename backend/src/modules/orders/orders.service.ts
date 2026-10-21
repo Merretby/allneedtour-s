@@ -4,9 +4,21 @@ import { ProductsRepository } from '../products/products.repository.js';
 import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { calculatePagination, createPaginatedResult, PaginationParams } from '../../common/utils/pagination.js';
+import { logger } from '../../config/logger.js';
+import { notificationHub } from '../notifications/notifications.hub.js';
+import { sendPushToAdmins, sendPushToUser } from '../notifications/notifications.push.js';
 
 const FREE_SHIPPING_THRESHOLD = 60;
 const SHIPPING_FEE = 30;
+
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  pending: 'En attente',
+  confirmed: 'Confirmée',
+  shipped: 'En cours de livraison',
+  on_livraison: 'En cours de livraison',
+  delivered: 'Livrée',
+  cancelled: 'Annulée',
+};
 
 export class OrdersService {
   constructor(
@@ -83,15 +95,60 @@ export class OrdersService {
       throw AppError.internal('Failed to create order');
     }
 
+    notificationHub.sendToAdmins('new_order', {
+      orderId: createdOrder.id,
+      total: createdOrder.total,
+      userId: createdOrder.user_id,
+    });
+
+    void sendPushToAdmins({
+      title: 'Nouvelle commande',
+      body: `Commande #${createdOrder.id.slice(0, 8)} — ${Number(createdOrder.total).toFixed(2)} Dhs`,
+      url: '/admin',
+      tag: `new-order-${createdOrder.id}`,
+    }).catch((error) => {
+      logger.warn({ err: error }, 'Failed to send new order push notification');
+    });
+
     return createdOrder;
   }
 
   // Admin-only: callers must verify the admin role before calling this.
-  async updateOrderStatus(orderId: string, status: Order['status']): Promise<Order> {
+  async updateOrderStatus(
+    orderId: string,
+    status: Order['status'],
+    actorId?: string
+  ): Promise<Order> {
     const order = await this.repository.findById(orderId);
     if (!order) {
       throw AppError.notFound('Order not found', ErrorCodes.ORDER_NOT_FOUND);
     }
-    return this.repository.updateStatus(orderId, status);
+
+    const updated = await this.repository.updateStatus(orderId, status);
+
+    // Only notify when the status actually changed.
+    if (order.status !== status) {
+      notificationHub.sendToUser(order.user_id, 'order_status', {
+        orderId: updated.id,
+        status,
+        actorId: actorId ?? null,
+      });
+
+      void sendPushToUser(order.user_id, {
+        title: 'Commande mise à jour',
+        body: `Votre commande est maintenant : ${
+          ORDER_STATUS_LABELS[status] ?? status
+        }`,
+        url: '/orders',
+        tag: `order-${updated.id}`,
+      }).catch((error) => {
+        logger.warn(
+          { err: error },
+          'Failed to send order status push notification'
+        );
+      });
+    }
+
+    return updated;
   }
 }

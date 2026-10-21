@@ -5,6 +5,7 @@ import { productsRouter } from '../modules/products/products.router.js';
 import { cartRouter } from '../modules/cart/cart.router.js';
 import { ordersRouter } from '../modules/orders/orders.router.js';
 import { favoritesRouter } from '../modules/favorites/favorites.router.js';
+import { notificationsRouter } from '../modules/notifications/notifications.router.js';
 import { healthRouter } from '../modules/health/health.router.js';
 
 export async function registerRoutes(fastify: FastifyInstance): Promise<void> {
@@ -18,6 +19,7 @@ export async function registerRoutes(fastify: FastifyInstance): Promise<void> {
       await instance.register(cartRouter, { prefix: '/cart' });
       await instance.register(ordersRouter, { prefix: '/orders' });
       await instance.register(favoritesRouter, { prefix: '/favorites' });
+      await instance.register(notificationsRouter, { prefix: '/notifications' });
       await instance.register(healthRouter);
     },
     { prefix: '/api/v1' }

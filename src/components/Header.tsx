@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, User, Heart, ShoppingCart, Tag, Package, MessageSquare, MapPin, Gift, CreditCard, Store, Clock, Shield, Bell, LogOut } from "lucide-react";
+import { Search, User, Heart, ShoppingCart, Tag, Package, MessageSquare, MapPin, Gift, CreditCard, Store, Clock, Shield, LogOut } from "lucide-react";
+import NotificationToggle from "@/components/NotificationToggle";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -153,10 +154,7 @@ const Header = () => {
                     <span>Sécurité du compte</span>
                   </DropdownMenuItem>
                   
-                  <DropdownMenuItem className="cursor-pointer py-2">
-                    <Bell className="mr-2 h-4 w-4" />
-                    <span>Notifications</span>
-                  </DropdownMenuItem>
+                  <NotificationToggle />
                   
                   <DropdownMenuSeparator />
                   

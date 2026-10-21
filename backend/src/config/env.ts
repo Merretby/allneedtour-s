@@ -14,6 +14,9 @@ const envSchema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:1122'),
   RATE_LIMIT_MAX: z.string().default('100'),
   RATE_LIMIT_TIMEWINDOW: z.string().default('60000'),
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().default('mailto:admin@example.com'),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -34,4 +37,7 @@ export const env = {
   CORS_ORIGINS: parsedEnv.data.CORS_ORIGINS.split(',').map((origin) => origin.trim()),
   RATE_LIMIT_MAX: parseInt(parsedEnv.data.RATE_LIMIT_MAX, 10),
   RATE_LIMIT_TIMEWINDOW: parseInt(parsedEnv.data.RATE_LIMIT_TIMEWINDOW, 10),
+  VAPID_PUBLIC_KEY: parsedEnv.data.VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY: parsedEnv.data.VAPID_PRIVATE_KEY,
+  VAPID_SUBJECT: parsedEnv.data.VAPID_SUBJECT,
 };

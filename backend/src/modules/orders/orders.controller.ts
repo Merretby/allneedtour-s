@@ -53,7 +53,11 @@ export class OrdersController {
     if (request.user!.role !== 'admin') {
       throw AppError.forbidden('Admin access required');
     }
-    const order = await this.service.updateOrderStatus(request.params.id, request.body.status);
+    const order = await this.service.updateOrderStatus(
+      request.params.id,
+      request.body.status,
+      request.user!.userId
+    );
     sendSuccess(reply, order);
   }
 }
