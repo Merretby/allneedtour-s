@@ -57,7 +57,15 @@ export class ProductsRepository {
     let query = supabase.from('products').select('*', { count: 'exact' });
 
     if (category) {
-      query = query.eq('category', category);
+      const categories = category
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean);
+      if (categories.length === 1) {
+        query = query.eq('category', categories[0]);
+      } else if (categories.length > 1) {
+        query = query.in('category', categories);
+      }
     }
 
     if (search) {

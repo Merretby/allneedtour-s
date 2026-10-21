@@ -22,19 +22,78 @@ const categoryNames: Record<string, string> = {
   marques: "Marques",
 };
 
-// slug -> category value stored in the database
-const categoryFilter: Record<string, string> = {
-  skincare: "Skincare",
-  capillaire: "Capillaire",
-  maquillage: "Maquillage",
-  parfums: "Parfums",
-  "k-beauty": "K-Beauty",
+// Navbar groups mapped to the category values stored in the imported catalog.
+const categoryFilter: Record<string, string[]> = {
+  "k-beauty": ["PRODUITS COREENS"],
+  skincare: [
+    "SOINS HYDRATANTS",
+    "MASQUES ET CREMES",
+    "SOINS ECLAIRCISSANTS ET ANTI PIGMENTS",
+    "SOINS ANTI AGE",
+    "CREMES JOUR",
+    "SOINS ANTI ACNE",
+    "SOINS ANTI IMPERFECTIONS",
+    "SERUMS ET HUILES",
+    "ACCESSOIRES DE SOINS VISAGE",
+    "SOINS CONTOURS YEUX",
+    "MASQUES VISAGE",
+    "CREMES SOLAIRES",
+    "GELS SOLAIRE",
+  ],
+  capillaire: [
+    "ACCESSOIRES POUR CHEVEUX",
+    "CAPILLAIRE - DERCOS",
+    "COLORATION CHEVEUX",
+    "SHAMPOING CHEVEUX COLORES",
+    "SOIN CAPILLAIRE PREMIUM",
+    "ANTI-POUX",
+    "APRES SHAMPOING",
+    "SHAMPOING CHEVEUX SECS",
+    "SPRAYS VOLUME CHEVEUX",
+    "SHAMPOING SEC",
+    "SHAMPOINGS ANTI-CHUTE",
+    "SOINS CHEVEUX VISAGE ET CORPS",
+    "GELS COIFFANTS",
+    "LAQUES CHEVEUX",
+    "SHAMPOINGS USAGE FREQUENT",
+    "PRODUITS COIFFANTS",
+    "SHAMPOING CHEVEUX GRAS",
+    "ANTI CHUTE",
+    "RACINE",
+    "PRODUITS AMERICAINS CHEVEUX",
+  ],
+  maquillage: [
+    "MAKE UP YOUR MIND",
+    "YEUX ET SOURCILS",
+    "LIPSTICK DAY",
+    "LEVRES",
+    "ACCESSOIRES DE MAQUILLAGES",
+    "FONDS DE TEINT",
+    "MAQUILLAGE - MAKEUP",
+    "YEUX",
+    "ONGLES",
+    "BLUSH",
+    "POUDRES",
+    "GLOW",
+    "LIPS MAYBELLINE",
+  ],
+  parfums: ["PARFUMS"],
+  "sante-bien-etre": [
+    "COMPLEMENTS CHEVEUX ET ONGLES",
+    "COMPLEMENTS ALIMENTAIRES",
+    "DENTIFRICES",
+    "POMMADES ET CREMES CICATRISANTES",
+    "FASHION BEBE ET ENFANT",
+    "CHANGES BEBE",
+    "COU DOS ET POSTURE",
+  ],
+  "corps-bain": ["SOINS MAINS ET PIEDS", "PRODUITS AMERICAINS VISAGE ET CORPS"],
 };
 
 const Category = () => {
   const { slug } = useParams();
   const categoryName = categoryNames[slug || ""] || "Produits";
-  const backendCategory = slug ? categoryFilter[slug] : undefined;
+  const backendCategory = slug ? categoryFilter[slug]?.join(",") : undefined;
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isError } = useProducts({
