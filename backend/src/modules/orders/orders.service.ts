@@ -1,6 +1,8 @@
 import { OrdersRepository, OrderWithItems, Order } from './orders.repository.js';
 import { CartRepository } from '../cart/cart.repository.js';
 import { ProductsRepository } from '../products/products.repository.js';
+import { CampaignsRepository } from '../campaigns/campaigns.repository.js';
+import { applyCampaignPricing } from '../campaigns/campaigns.pricing.js';
 import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { calculatePagination, createPaginatedResult, PaginationParams } from '../../common/utils/pagination.js';
@@ -24,7 +26,8 @@ export class OrdersService {
   constructor(
     private repository: OrdersRepository,
     private cartRepository: CartRepository,
-    private productsRepository: ProductsRepository
+    private productsRepository: ProductsRepository,
+    private campaignsRepository: CampaignsRepository = new CampaignsRepository()
   ) {}
 
   async getOrder(userId: string, orderId: string): Promise<OrderWithItems> {
@@ -67,7 +70,14 @@ export class OrdersService {
       }
     }
 
-    const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const promoMap = await this.campaignsRepository.getActivePromoMap();
+    const unitPrice = (product: { id: string; price: number | string }) =>
+      Number(applyCampaignPricing(product, promoMap).price);
+
+    const subtotal = cartItems.reduce(
+      (sum, item) => sum + unitPrice(item.product) * item.quantity,
+      0
+    );
     const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
     const total = subtotal + shippingFee;
 
@@ -76,7 +86,7 @@ export class OrdersService {
     const orderItems = cartItems.map((item) => ({
       productId: item.product_id,
       quantity: item.quantity,
-      price: item.product.price,
+      price: unitPrice(item.product),
     }));
 
     await this.repository.createOrderItems(order.id, orderItems);

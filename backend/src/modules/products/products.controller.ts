@@ -13,17 +13,33 @@ export class ProductsController {
     }
   }
 
+  private wantsBasePricing(request: FastifyRequest): boolean {
+    return (
+      (request as FastifyRequest<{ Querystring: { pricing?: string } }>).query
+        ?.pricing === 'base' && request.user?.role === 'admin'
+    );
+  }
+
   async getProduct(
-    request: FastifyRequest<{ Params: { id: string } }>,
+    request: FastifyRequest<{ Params: { id: string }; Querystring: { pricing?: string } }>,
     reply: FastifyReply
   ): Promise<void> {
-    const product = await this.service.getProduct(request.params.id);
+    const product = await this.service.getProduct(
+      request.params.id,
+      this.wantsBasePricing(request)
+    );
     sendSuccess(reply, product);
   }
 
   async getProducts(
     request: FastifyRequest<{
-      Querystring: { page?: string; limit?: string; category?: string; search?: string };
+      Querystring: {
+        page?: string;
+        limit?: string;
+        category?: string;
+        search?: string;
+        pricing?: string;
+      };
     }>,
     reply: FastifyReply
   ): Promise<void> {
@@ -34,6 +50,7 @@ export class ProductsController {
       limit,
       category: request.query.category,
       search: request.query.search,
+      basePricing: this.wantsBasePricing(request),
     });
     sendSuccess(reply, result);
   }

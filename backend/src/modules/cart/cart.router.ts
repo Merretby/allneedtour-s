@@ -4,6 +4,7 @@ import { CartController } from './cart.controller.js';
 import { CartService } from './cart.service.js';
 import { CartRepository } from './cart.repository.js';
 import { ProductsRepository } from '../products/products.repository.js';
+import { CampaignsRepository } from '../campaigns/campaigns.repository.js';
 import { authenticate } from '../../common/middlewares/auth.js';
 import { validate } from '../../common/middlewares/validate.js';
 import { addToCartSchema, updateCartItemSchema } from './cart.schema.js';
@@ -11,7 +12,8 @@ import { addToCartSchema, updateCartItemSchema } from './cart.schema.js';
 export async function cartRouter(fastify: FastifyInstance): Promise<void> {
   const cartRepository = new CartRepository();
   const productsRepository = new ProductsRepository();
-  const service = new CartService(cartRepository, productsRepository);
+  const campaignsRepository = new CampaignsRepository();
+  const service = new CartService(cartRepository, productsRepository, campaignsRepository);
   const controller = new CartController(service);
 
   fastify.get('/', { preHandler: [authenticate] }, controller.getCart.bind(controller) as unknown as RouteHandlerMethod);

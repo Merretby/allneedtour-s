@@ -1,11 +1,36 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChevronDown } from "lucide-react";
 
+const CLOSE_DELAY_MS = 120;
+
 const Navigation = () => {
   const navigate = useNavigate();
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const closeTimer = useRef<number | null>(null);
+
+  const openCategory = (slug: string) => {
+    if (closeTimer.current) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    setHoveredCategory(slug);
+  };
+
+  const scheduleClose = () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(
+      () => setHoveredCategory(null),
+      CLOSE_DELAY_MS
+    );
+  };
+
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    };
+  }, []);
 
   const categories = [
     {
@@ -144,15 +169,26 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="border-b border-border bg-card sticky top-[76px] z-40 overflow-visible">
+    <nav
+      className="border-b border-border bg-card sticky top-[76px] z-40 overflow-visible"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setHoveredCategory(null);
+      }}
+    >
       <div className="container mx-auto px-4 overflow-visible">
-        <div className="flex space-x-6 py-4 overflow-x-auto overflow-y-visible">
-          {categories.map((category) => (
+        <div className="flex space-x-6 py-4 overflow-x-auto md:overflow-visible">
+          {categories.map((category, index) => (
             <div
               key={category.slug}
               className="relative flex-shrink-0"
-              onMouseEnter={() => setHoveredCategory(category.slug)}
-              onMouseLeave={() => setHoveredCategory(null)}
+              onMouseEnter={() => openCategory(category.slug)}
+              onMouseLeave={scheduleClose}
+              onFocus={() => openCategory(category.slug)}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+                  scheduleClose();
+                }
+              }}
             >
               <button
                 onClick={() => navigate(`/category/${category.slug}`)}
@@ -164,41 +200,40 @@ const Navigation = () => {
 
               {/* Dropdown Menu */}
               {hoveredCategory === category.slug && (
-                <div 
-                  className="fixed mt-2 bg-white dark:bg-gray-900 border border-border rounded-lg shadow-2xl min-w-[320px] max-w-[700px] p-6 z-[999]"
-                  style={{
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    top: '180px'
-                  }}
-                  onMouseEnter={() => setHoveredCategory(category.slug)}
-                  onMouseLeave={() => setHoveredCategory(null)}
+                <div
+                  className={`absolute top-full z-50 pt-2 ${
+                    index >= categories.length - 2 ? "right-0" : "left-0"
+                  }`}
+                  onMouseEnter={() => openCategory(category.slug)}
+                  onMouseLeave={scheduleClose}
                 >
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-4 max-h-[500px] overflow-y-auto">
-                    {category.subcategories.map((sub, idx) => (
-                      <div key={idx} className="group">
-                        <h3 
-                          className="font-semibold text-sm text-foreground mb-2 hover:text-primary cursor-pointer"
-                          onClick={() => navigate(`/category/${category.slug}`)}
-                        >
-                          {sub.name}
-                        </h3>
-                        {sub.items && sub.items.length > 0 && (
-                          <ul className="ml-3 space-y-1.5">
-                            {sub.items.map((item, itemIdx) => (
-                              <li key={itemIdx}>
-                                <button
-                                  onClick={() => navigate(`/category/${category.slug}`)}
-                                  className="text-xs text-muted-foreground hover:text-primary smooth-transition block text-left"
-                                >
-                                  • {item}
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ))}
+                  <div className="bg-white dark:bg-gray-900 border border-border rounded-lg shadow-2xl min-w-[320px] max-w-[700px] p-6">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4 max-h-[500px] overflow-y-auto">
+                      {category.subcategories.map((sub, idx) => (
+                        <div key={idx} className="group">
+                          <h3
+                            className="font-semibold text-sm text-foreground mb-2 hover:text-primary cursor-pointer"
+                            onClick={() => navigate(`/category/${category.slug}`)}
+                          >
+                            {sub.name}
+                          </h3>
+                          {sub.items && sub.items.length > 0 && (
+                            <ul className="ml-3 space-y-1.5">
+                              {sub.items.map((item, itemIdx) => (
+                                <li key={itemIdx}>
+                                  <button
+                                    onClick={() => navigate(`/category/${category.slug}`)}
+                                    className="text-xs text-muted-foreground hover:text-primary smooth-transition block text-left"
+                                  >
+                                    • {item}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}

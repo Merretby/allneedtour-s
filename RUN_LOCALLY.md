@@ -20,8 +20,10 @@ In development Vite proxies `/api` to `http://localhost:3000`, so the browser se
 
 1. Open your project: https://supabase.com/dashboard
 2. Go to **SQL Editor**.
-3. Run the full contents of:
-   `supabase/migrations/20261020000000_backend_integration.sql`
+3. Run the SQL files in `supabase/migrations/` in order (oldest first):
+   - `20261020000000_backend_integration.sql`
+   - `20261021000000_add_on_livraison_status.sql`
+   - `20261022000000_black_friday.sql` (Black Friday campaign)
 4. Go to **Project Settings → API** and copy:
    - **Project URL**
    - **Secret key** (`sb_secret_...` or the legacy `service_role` key)

@@ -1,14 +1,18 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBlackFriday } from "@/lib/api/hooks";
 
-const slides = [
+const BASE_SLIDES = [
   {
     id: 1,
     title: "Black Friday",
     subtitle: "Jusqu'à -50% sur une sélection",
     cta: "Découvrir",
     bgColor: "bg-accent",
+    path: "/black-friday",
+    campaignOnly: true,
   },
   {
     id: 2,
@@ -16,6 +20,8 @@ const slides = [
     subtitle: "Les dernières tendances de Corée",
     cta: "Shop Now",
     bgColor: "bg-primary",
+    path: "/category/k-beauty",
+    campaignOnly: false,
   },
   {
     id: 3,
@@ -23,18 +29,32 @@ const slides = [
     subtitle: "Protégez votre peau du froid",
     cta: "Voir la collection",
     bgColor: "bg-wellness",
+    path: "/category/skincare",
+    campaignOnly: false,
   },
 ];
 
 const HeroCarousel = () => {
+  const navigate = useNavigate();
+  const { data: campaign } = useBlackFriday();
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const slides = useMemo(
+    () => BASE_SLIDES.filter((slide) => !slide.campaignOnly || campaign?.active),
+    [campaign?.active]
+  );
+
   useEffect(() => {
+    if (currentSlide >= slides.length) setCurrentSlide(0);
+  }, [slides.length, currentSlide]);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () =>
@@ -59,6 +79,7 @@ const HeroCarousel = () => {
               </p>
               <Button
                 size="lg"
+                onClick={() => navigate(slide.path)}
                 className="bg-card text-foreground hover:bg-card/90 rounded-full px-8"
               >
                 {slide.cta}

@@ -1,16 +1,32 @@
 import { CartRepository, CartItemWithProduct } from './cart.repository.js';
 import { ProductsRepository } from '../products/products.repository.js';
+import { CampaignsRepository } from '../campaigns/campaigns.repository.js';
+import { applyCampaignPricing } from '../campaigns/campaigns.pricing.js';
 import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 
 export class CartService {
   constructor(
     private repository: CartRepository,
-    private productsRepository: ProductsRepository
+    private productsRepository: ProductsRepository,
+    private campaignsRepository: CampaignsRepository = new CampaignsRepository()
   ) {}
 
+  private async withCampaignPricing(
+    items: CartItemWithProduct[]
+  ): Promise<CartItemWithProduct[]> {
+    const promoMap = await this.campaignsRepository.getActivePromoMap();
+    if (promoMap.size === 0) return items;
+
+    return items.map((item) => ({
+      ...item,
+      product: applyCampaignPricing(item.product, promoMap),
+    }));
+  }
+
   async getCart(userId: string): Promise<CartItemWithProduct[]> {
-    return this.repository.findByUserId(userId);
+    const items = await this.repository.findByUserId(userId);
+    return this.withCampaignPricing(items);
   }
 
   async addToCart(userId: string, productId: string, quantity: number): Promise<CartItemWithProduct[]> {
@@ -39,7 +55,7 @@ export class CartService {
       await this.repository.addItem(userId, productId, quantity);
     }
 
-    return this.repository.findByUserId(userId);
+    return this.withCampaignPricing(await this.repository.findByUserId(userId));
   }
 
   async updateCartItem(userId: string, itemId: string, quantity: number): Promise<CartItemWithProduct[]> {
@@ -60,7 +76,7 @@ export class CartService {
     }
 
     await this.repository.updateQuantity(itemId, quantity);
-    return this.repository.findByUserId(userId);
+    return this.withCampaignPricing(await this.repository.findByUserId(userId));
   }
 
   async removeFromCart(userId: string, itemId: string): Promise<void> {

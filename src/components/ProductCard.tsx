@@ -10,9 +10,10 @@ import { ApiError } from "@/lib/api/client";
 
 interface ProductCardProps {
   product: Product;
+  promoLabel?: string;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, promoLabel = "Promo" }: ProductCardProps) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const addToCart = useAddToCart();
@@ -82,7 +83,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </button>
         {compareAt > price && (
           <span className="absolute top-3 left-3 bg-destructive text-destructive-foreground px-2 py-1 rounded-full text-xs font-semibold">
-            Promo
+            {promoLabel}
           </span>
         )}
       </div>

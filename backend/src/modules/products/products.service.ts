@@ -1,21 +1,32 @@
 import { ProductsRepository, Product, CreateProductInput, UpdateProductInput } from './products.repository.js';
+import { CampaignsRepository } from '../campaigns/campaigns.repository.js';
+import { applyCampaignPricing } from '../campaigns/campaigns.pricing.js';
 import { AppError } from '../../common/errors/AppError.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { calculatePagination, createPaginatedResult, PaginationParams } from '../../common/utils/pagination.js';
 import { uploadProductImage } from './products.storage.js';
 
 export class ProductsService {
-  constructor(private repository: ProductsRepository) {}
+  constructor(
+    private repository: ProductsRepository,
+    private campaignsRepository: CampaignsRepository = new CampaignsRepository()
+  ) {}
 
-  async getProduct(id: string): Promise<Product> {
+  async getProduct(id: string, basePricing = false): Promise<Product> {
     const product = await this.repository.findById(id);
     if (!product) {
       throw AppError.notFound('Product not found', ErrorCodes.PRODUCT_NOT_FOUND);
     }
-    return product;
+
+    if (basePricing) return product;
+
+    const promoMap = await this.campaignsRepository.getActivePromoMap();
+    return applyCampaignPricing(product, promoMap);
   }
 
-  async getProducts(params: PaginationParams & { category?: string; search?: string }) {
+  async getProducts(
+    params: PaginationParams & { category?: string; search?: string; basePricing?: boolean }
+  ) {
     const { page, limit, offset } = calculatePagination(params);
     const { products, total } = await this.repository.findAll(
       limit,
@@ -23,7 +34,17 @@ export class ProductsService {
       params.category,
       params.search
     );
-    return createPaginatedResult(products, total, page, limit);
+    const result = createPaginatedResult(products, total, page, limit);
+
+    if (params.basePricing) return result;
+
+    const promoMap = await this.campaignsRepository.getActivePromoMap();
+    if (promoMap.size === 0) return result;
+
+    return {
+      ...result,
+      data: result.data.map((product) => applyCampaignPricing(product, promoMap)),
+    };
   }
 
   async createProduct(input: CreateProductInput): Promise<Product> {

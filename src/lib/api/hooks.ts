@@ -3,7 +3,14 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { cartApi, favoritesApi, ordersApi, productsApi, usersApi } from "@/lib/api/endpoints";
+import {
+  campaignsApi,
+  cartApi,
+  favoritesApi,
+  ordersApi,
+  productsApi,
+  usersApi,
+} from "@/lib/api/endpoints";
 import type { OrderStatus, ProductInput, User } from "@/lib/api/types";
 import { useAuth } from "@/context/AuthContext";
 
@@ -20,6 +27,8 @@ export const queryKeys = {
   cart: ["cart"] as const,
   favorites: ["favorites"] as const,
   orders: ["orders"] as const,
+  blackFriday: ["campaign", "black_friday"] as const,
+  blackFridayAdmin: ["campaign", "black_friday", "admin"] as const,
 };
 
 /* ---------------------------------- products --------------------------------- */
@@ -179,8 +188,66 @@ export function useAdminProducts() {
   const { user } = useAuth();
   return useQuery({
     queryKey: ["admin", "products"],
-    queryFn: () => productsApi.list({ limit: 100 }),
+    // Base pricing: admins must always see the normal price, never the
+    // Black Friday price that customers see while a campaign runs.
+    queryFn: () => productsApi.list({ limit: 100, pricing: "base" }),
     enabled: user?.role === "admin",
+  });
+}
+
+/* ------------------------------- campaigns ------------------------------- */
+
+export function useBlackFriday() {
+  return useQuery({
+    queryKey: queryKeys.blackFriday,
+    queryFn: campaignsApi.blackFriday,
+    retry: false,
+  });
+}
+
+export function useBlackFridayAdmin() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: queryKeys.blackFridayAdmin,
+    queryFn: campaignsApi.blackFridayAdmin,
+    enabled: user?.role === "admin",
+  });
+}
+
+function invalidateBlackFriday(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.blackFriday });
+  queryClient.invalidateQueries({ queryKey: queryKeys.blackFridayAdmin });
+  queryClient.invalidateQueries({ queryKey: ["products"] });
+  queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+  queryClient.invalidateQueries({ queryKey: queryKeys.cart });
+}
+
+export function useUpdateBlackFriday() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      is_active?: boolean;
+      starts_at?: string | null;
+      ends_at?: string | null;
+    }) => campaignsApi.updateBlackFriday(input),
+    onSuccess: () => invalidateBlackFriday(queryClient),
+  });
+}
+
+export function useSetBlackFridayProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, promoPrice }: { productId: string; promoPrice: number }) =>
+      campaignsApi.setBlackFridayProduct(productId, promoPrice),
+    onSuccess: () => invalidateBlackFriday(queryClient),
+  });
+}
+
+export function useRemoveBlackFridayProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (productId: string) => campaignsApi.removeBlackFridayProduct(productId),
+    onSuccess: () => invalidateBlackFriday(queryClient),
   });
 }
 

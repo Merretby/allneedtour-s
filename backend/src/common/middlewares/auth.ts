@@ -16,6 +16,25 @@ declare module 'fastify' {
   }
 }
 
+/**
+ * Attaches the user when a valid token is present, but never rejects the
+ * request. Useful for public endpoints that change behaviour for admins.
+ */
+export async function optionalAuthenticate(
+  request: FastifyRequest,
+  _reply: FastifyReply
+): Promise<void> {
+  const authHeader = request.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return;
+
+  try {
+    const decoded = jwt.verify(authHeader.substring(7), env.JWT_SECRET) as JWTPayload;
+    request.user = decoded;
+  } catch {
+    // Ignore invalid tokens: the route stays public.
+  }
+}
+
 export async function authenticate(
   request: FastifyRequest,
   reply: FastifyReply

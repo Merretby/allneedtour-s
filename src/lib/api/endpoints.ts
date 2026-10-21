@@ -1,6 +1,9 @@
 import { apiFetch } from "./client";
 import type {
   AuthResponse,
+  BlackFridayAdmin,
+  BlackFridayPublic,
+  Campaign,
   CartItem,
   Favorite,
   Order,
@@ -16,6 +19,7 @@ interface ProductListParams {
   limit?: number;
   category?: string;
   search?: string;
+  pricing?: "base";
 }
 
 interface OrderListParams {
@@ -66,6 +70,32 @@ export const productsApi = {
     apiFetch<Product>(`/products/${id}`, { method: "PATCH", body: input }),
 
   remove: (id: string) => apiFetch<void>(`/products/${id}`, { method: "DELETE" }),
+};
+
+export const campaignsApi = {
+  blackFriday: () =>
+    apiFetch<BlackFridayPublic>("/campaigns/black-friday", { auth: false }),
+
+  blackFridayAdmin: () =>
+    apiFetch<BlackFridayAdmin>("/campaigns/black-friday/admin"),
+
+  updateBlackFriday: (input: {
+    is_active?: boolean;
+    starts_at?: string | null;
+    ends_at?: string | null;
+  }) =>
+    apiFetch<Campaign>("/campaigns/black-friday", { method: "PATCH", body: input }),
+
+  setBlackFridayProduct: (productId: string, promoPrice: number) =>
+    apiFetch<{ product_id: string; promo_price: number }>(
+      `/campaigns/black-friday/products/${productId}`,
+      { method: "PUT", body: { promo_price: promoPrice } }
+    ),
+
+  removeBlackFridayProduct: (productId: string) =>
+    apiFetch<void>(`/campaigns/black-friday/products/${productId}`, {
+      method: "DELETE",
+    }),
 };
 
 export const notificationsApi = {

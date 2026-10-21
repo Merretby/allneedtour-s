@@ -7,12 +7,14 @@ import HeroCarousel from "@/components/HeroCarousel";
 import ProductCarousel from "@/components/ProductCarousel";
 import SeasonalBanner from "@/components/SeasonalBanner";
 import Footer from "@/components/Footer";
+import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Globe } from "lucide-react";
 import { Star } from "lucide-react";
+import { Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useProducts } from "@/lib/api/hooks";
+import { useBlackFriday, useProducts } from "@/lib/api/hooks";
 import { formatPrice, resolveImageUrl, toNumber } from "@/lib/format";
 
 const Index = () => {
@@ -23,6 +25,7 @@ const Index = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
   const { data, isLoading } = useProducts({ limit: 12 });
+  const { data: blackFriday } = useBlackFriday();
   const recommendedProducts = data?.data ?? [];
   const deals = recommendedProducts.filter(
     (product) => toNumber(product.compare_at_price) > toNumber(product.price)
@@ -90,6 +93,43 @@ const Index = () => {
       <Header />
       <Navigation />
       <HeroCarousel />
+
+      {/* Black Friday Section */}
+      {blackFriday?.active && (blackFriday.products?.length ?? 0) > 0 && (
+        <section className="border-y border-destructive/20 bg-destructive/5 py-12">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-destructive px-4 py-1 text-sm font-semibold text-destructive-foreground">
+                <Tag className="h-4 w-4" />
+                Black Friday
+              </div>
+              <h2 className="mt-4 text-3xl md:text-4xl font-heading font-bold text-foreground">
+                Offres Black Friday
+              </h2>
+              <p className="text-muted-foreground">
+                Une sélection à prix réduit, pendant la campagne uniquement
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {blackFriday.products.slice(0, 4).map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  promoLabel="Black Friday"
+                />
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <Button
+                onClick={() => navigate("/black-friday")}
+                className="rounded-full"
+              >
+                Voir toutes les offres →
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Recommendations Section */}
       <section className="container mx-auto px-4 py-16">

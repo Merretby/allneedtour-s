@@ -14,6 +14,7 @@ export interface CartItemWithProduct extends CartItem {
     id: string;
     name: string;
     price: number;
+    compare_at_price?: number | null;
     image_url?: string;
     stock: number;
   };
@@ -25,7 +26,7 @@ export class CartRepository {
       .from('cart_items')
       .select(`
         *,
-        product:products(id, name, price, image_url, stock)
+        product:products(id, name, price, compare_at_price, image_url, stock)
       `)
       .eq('user_id', userId);
 

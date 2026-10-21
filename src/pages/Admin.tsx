@@ -15,6 +15,7 @@ import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import BlackFridayPanel from "@/components/admin/BlackFridayPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -433,6 +434,7 @@ const Admin = () => {
           <TabsList>
             <TabsTrigger value="orders">Commandes</TabsTrigger>
             <TabsTrigger value="products">Produits</TabsTrigger>
+            <TabsTrigger value="black-friday">Black Friday</TabsTrigger>
             <TabsTrigger value="clients">Clients</TabsTrigger>
           </TabsList>
 
@@ -893,6 +895,11 @@ const Admin = () => {
                 </TableBody>
               </Table>
             </div>
+          </TabsContent>
+
+          {/* ----------------------------- Black Friday ---------------------------- */}
+          <TabsContent value="black-friday" className="space-y-6">
+            <BlackFridayPanel />
           </TabsContent>
 
           {/* -------------------------------- Clients ------------------------------ */}

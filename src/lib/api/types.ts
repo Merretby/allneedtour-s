@@ -32,6 +32,36 @@ export interface ProductInput {
   compare_at_price?: number | null;
 }
 
+export interface Campaign {
+  key: string;
+  label: string;
+  is_active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BlackFridayProduct extends Product {
+  black_friday_price?: number | null;
+  included?: boolean;
+}
+
+export interface BlackFridayPublic {
+  key: string;
+  label: string;
+  active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  products: Product[];
+}
+
+export interface BlackFridayAdmin {
+  campaign: Campaign;
+  products: BlackFridayProduct[];
+}
+
 export interface CartItem {
   id: string;
   user_id: string;
@@ -43,6 +73,7 @@ export interface CartItem {
     id: string;
     name: string;
     price: number | string;
+    compare_at_price?: number | string | null;
     image_url?: string | null;
     stock: number;
   };
