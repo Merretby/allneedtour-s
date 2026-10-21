@@ -69,7 +69,7 @@ const Footer = () => {
         { label: "Idées cadeaux", path: "/category/bons-plans" },
         { label: "Cartes cadeaux", path: "/category/bons-plans" },
         { label: "Gravure parfum", path: "/category/parfums" },
-        { label: "Black Friday", path: "/category/bons-plans" },
+        { label: "Black Friday", path: "/black-friday" },
         { label: "Single day", path: "/category/bons-plans" },
         { label: "Calendrier de l'avent", path: "/category/bons-plans" },
         { label: "Clean Beauty", path: "/category/skincare" },

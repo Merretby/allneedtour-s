@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Tag } from "lucide-react";
+import { useBlackFriday } from "@/lib/api/hooks";
 
 const CLOSE_DELAY_MS = 120;
 
 const Navigation = () => {
   const navigate = useNavigate();
+  const { data: blackFriday } = useBlackFriday();
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const closeTimer = useRef<number | null>(null);
 
@@ -42,7 +44,6 @@ const Navigation = () => {
         { name: "Coffrets cadeaux", items: [] },
         { name: "Cartes-cadeaux", items: [] },
         { name: "Jeux concours", items: [] },
-        { name: "Black Friday", items: [] },
         { name: "Événements spéciaux", items: [] },
       ],
     },
@@ -176,7 +177,16 @@ const Navigation = () => {
       }}
     >
       <div className="container mx-auto px-4 overflow-visible">
-        <div className="flex space-x-6 py-4 overflow-x-auto md:overflow-visible">
+        <div className="flex items-center space-x-6 py-4 overflow-x-auto md:overflow-visible">
+          {blackFriday?.active && (
+            <button
+              onClick={() => navigate("/black-friday")}
+              className="inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-destructive px-4 py-1.5 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 smooth-transition"
+            >
+              <Tag className="h-3.5 w-3.5" />
+              Black Friday
+            </button>
+          )}
           {categories.map((category, index) => (
             <div
               key={category.slug}
