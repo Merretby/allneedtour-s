@@ -15,7 +15,7 @@ export function formatPrice(value: number | string | null | undefined): string {
 
 export function resolveImageUrl(url?: string | null): string {
   if (!url) return "/placeholder.svg";
-  if (/^https?:\/\//.test(url)) return url;
+  if (/^(https?:\/\/|blob:|data:)/.test(url)) return url;
   return url.startsWith("/") ? url : `/${url}`;
 }
 

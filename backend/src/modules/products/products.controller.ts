@@ -38,6 +38,26 @@ export class ProductsController {
     sendSuccess(reply, result);
   }
 
+  async uploadImage(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void> {
+    this.assertAdmin(request);
+
+    const file = await request.file();
+    if (!file) {
+      throw AppError.badRequest('Aucun fichier fourni');
+    }
+
+    if (!file.mimetype.startsWith('image/')) {
+      throw AppError.badRequest('Le fichier doit être une image');
+    }
+
+    const buffer = await file.toBuffer();
+    const url = await this.service.uploadImage(buffer, file.mimetype);
+    sendCreated(reply, { url });
+  }
+
   async createProduct(
     request: FastifyRequest<{ Body: CreateProductInput }>,
     reply: FastifyReply

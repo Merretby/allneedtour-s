@@ -14,6 +14,12 @@ export async function productsRouter(fastify: FastifyInstance): Promise<void> {
 
   fastify.get('/', controller.getProducts.bind(controller) as unknown as RouteHandlerMethod);
 
+  fastify.post(
+    '/upload',
+    { preHandler: [authenticate] },
+    controller.uploadImage.bind(controller) as unknown as RouteHandlerMethod
+  );
+
   fastify.get('/:id', controller.getProduct.bind(controller) as unknown as RouteHandlerMethod);
 
   fastify.post(

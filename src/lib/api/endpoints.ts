@@ -50,6 +50,15 @@ export const productsApi = {
 
   get: (id: string) => apiFetch<Product>(`/products/${id}`, { auth: false }),
 
+  uploadImage: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiFetch<{ url: string }>("/products/upload", {
+      method: "POST",
+      body: formData,
+    });
+  },
+
   create: (input: ProductInput) =>
     apiFetch<Product>("/products", { method: "POST", body: input }),
 

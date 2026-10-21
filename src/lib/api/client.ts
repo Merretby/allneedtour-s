@@ -32,8 +32,10 @@ interface RequestOptions {
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, auth = true, signal, timeoutMs = 20000 } = options;
 
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (body !== undefined && !isFormData) headers["Content-Type"] = "application/json";
 
   const stored = readAuthStorage();
   if (auth && stored?.token) {
@@ -47,7 +49,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     const response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
       signal: signal ?? controller.signal,
     });
 

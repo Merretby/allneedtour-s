@@ -1,8 +1,9 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import {
   Boxes,
   Check,
+  Image as ImageIcon,
   Package,
   Pencil,
   ShoppingCart,
@@ -47,6 +48,7 @@ import {
   useUpdateOrderStatus,
   useUpdateProduct,
 } from "@/lib/api/hooks";
+import { productsApi } from "@/lib/api/endpoints";
 import type {
   Order,
   OrderStatus,
@@ -128,6 +130,10 @@ const Admin = () => {
 
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageInputKey, setImageInputKey] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const filteredOrders = useMemo(() => {
     let list = orders;
@@ -171,12 +177,55 @@ const Admin = () => {
     );
   };
 
+  const releasePreview = () => {
+    if (imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
+  };
+
   const resetForm = () => {
+    releasePreview();
     setForm(EMPTY_FORM);
     setEditingId(null);
+    setImageFile(null);
+    setImagePreview("");
+    setImageInputKey((key) => key + 1);
+  };
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner un fichier image");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image trop volumineuse (5 Mo maximum)");
+      event.target.value = "";
+      return;
+    }
+
+    releasePreview();
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    releasePreview();
+    setImageFile(null);
+    setImagePreview("");
+    setImageInputKey((key) => key + 1);
+    setForm((current) => ({ ...current, image_url: "" }));
   };
 
   const startEdit = (product: Product) => {
+    releasePreview();
+    setImageFile(null);
+    setImagePreview(product.image_url ?? "");
+    setImageInputKey((key) => key + 1);
     setEditingId(product.id);
     setForm({
       name: product.name,
@@ -192,7 +241,7 @@ const Admin = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const submitProduct = (event: FormEvent) => {
+  const submitProduct = async (event: FormEvent) => {
     event.preventDefault();
 
     const price = Number(form.price);
@@ -211,6 +260,21 @@ const Admin = () => {
       return;
     }
 
+    let imageUrl = form.image_url.trim();
+
+    if (imageFile) {
+      setIsUploading(true);
+      try {
+        const uploaded = await productsApi.uploadImage(imageFile);
+        imageUrl = uploaded.url;
+      } catch (error) {
+        toast.error(errorMessage(error));
+        return;
+      } finally {
+        setIsUploading(false);
+      }
+    }
+
     const payload: ProductInput = {
       name: form.name.trim(),
       description: form.description.trim(),
@@ -219,7 +283,7 @@ const Admin = () => {
       category: form.category.trim(),
     };
     if (form.brand.trim()) payload.brand = form.brand.trim();
-    if (form.image_url.trim()) payload.image_url = form.image_url.trim();
+    if (imageUrl) payload.image_url = imageUrl;
     if (form.compare_at_price.trim()) {
       const compare = Number(form.compare_at_price);
       if (Number.isFinite(compare)) payload.compare_at_price = compare;
@@ -257,7 +321,8 @@ const Admin = () => {
     });
   };
 
-  const isSavingProduct = createProduct.isPending || updateProductMutation.isPending;
+  const isSavingProduct =
+    createProduct.isPending || updateProductMutation.isPending || isUploading;
 
   return (
     <div className="min-h-screen bg-background">
@@ -573,13 +638,45 @@ const Admin = () => {
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="product-image">Image (URL)</Label>
-                    <Input
-                      id="product-image"
-                      value={form.image_url}
-                      onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                      placeholder="https://exemple.com/image.jpg"
-                    />
+                    <Label htmlFor="product-image">Image</Label>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                        {imagePreview ? (
+                          <img
+                            src={resolveImageUrl(imagePreview)}
+                            alt="Aperçu du produit"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          key={imageInputKey}
+                          id="product-image"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                          onChange={handleImageChange}
+                          disabled={isUploading}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          JPG, PNG, WebP, GIF ou AVIF — 5 Mo maximum.
+                        </p>
+                        {imagePreview && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearImage}
+                            disabled={isUploading}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Retirer l'image
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="product-compare">Prix barré (Dhs)</Label>
@@ -597,7 +694,11 @@ const Admin = () => {
                   <div className="flex items-end gap-2">
                     <Button type="submit" disabled={isSavingProduct}>
                       <Check className="h-4 w-4 mr-2" />
-                      {editingId ? "Enregistrer" : "Ajouter"}
+                      {isUploading
+                        ? "Envoi de l'image..."
+                        : editingId
+                          ? "Enregistrer"
+                          : "Ajouter"}
                     </Button>
                     {editingId && (
                       <Button type="button" variant="ghost" onClick={resetForm}>
