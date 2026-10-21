@@ -13,7 +13,8 @@ import { formatDate, formatPrice, orderStatusLabel, resolveImageUrl, toNumber } 
 const statusStyles: Record<string, string> = {
   pending: "bg-blue-500 text-white",
   confirmed: "bg-indigo-500 text-white",
-  shipped: "bg-cyan-500 text-white",
+  shipped: "bg-orange-500 text-white",
+  on_livraison: "bg-orange-500 text-white",
   delivered: "bg-green-500 text-white",
   cancelled: "bg-red-500 text-white",
 };
@@ -22,6 +23,7 @@ const statusIcons: Record<string, typeof Clock> = {
   pending: Clock,
   confirmed: CheckCircle2,
   shipped: Truck,
+  on_livraison: Truck,
   delivered: CheckCircle2,
   cancelled: XCircle,
 };

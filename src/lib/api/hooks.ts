@@ -4,7 +4,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { cartApi, favoritesApi, ordersApi, productsApi, usersApi } from "@/lib/api/endpoints";
-import type { User } from "@/lib/api/types";
+import type { OrderStatus, ProductInput, User } from "@/lib/api/types";
 import { useAuth } from "@/context/AuthContext";
 
 interface ProductListParams {
@@ -148,6 +148,91 @@ export function useUpdateProfile() {
     onSuccess: (updated: User) => {
       updateUser(updated);
       queryClient.invalidateQueries({ queryKey: queryKeys.orders });
+    },
+  });
+}
+
+/* ----------------------------------- admin ----------------------------------- */
+
+export function useAllOrders() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["admin", "orders"],
+    queryFn: () => ordersApi.listAll({ limit: 100 }),
+    enabled: user?.role === "admin",
+  });
+}
+
+export function useUpdateOrderStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
+      ordersApi.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders });
+    },
+  });
+}
+
+export function useAdminProducts() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["admin", "products"],
+    queryFn: () => productsApi.list({ limit: 100 }),
+    enabled: user?.role === "admin",
+  });
+}
+
+export function useCreateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ProductInput) => productsApi.create(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+}
+
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Partial<ProductInput> }) =>
+      productsApi.update(id, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => productsApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+}
+
+export function useAdminUsers() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["admin", "users"],
+    queryFn: () => usersApi.list({ limit: 100 }),
+    enabled: user?.role === "admin",
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => usersApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
     },
   });
 }

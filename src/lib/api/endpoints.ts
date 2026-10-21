@@ -4,8 +4,10 @@ import type {
   CartItem,
   Favorite,
   Order,
+  OrderStatus,
   Paginated,
   Product,
+  ProductInput,
   User,
 } from "./types";
 
@@ -47,6 +49,14 @@ export const productsApi = {
     apiFetch<Paginated<Product>>(`/products${toQueryString(params)}`, { auth: false }),
 
   get: (id: string) => apiFetch<Product>(`/products/${id}`, { auth: false }),
+
+  create: (input: ProductInput) =>
+    apiFetch<Product>("/products", { method: "POST", body: input }),
+
+  update: (id: string, input: Partial<ProductInput>) =>
+    apiFetch<Product>(`/products/${id}`, { method: "PATCH", body: input }),
+
+  remove: (id: string) => apiFetch<void>(`/products/${id}`, { method: "DELETE" }),
 };
 
 export const cartApi = {
@@ -77,12 +87,23 @@ export const ordersApi = {
   list: (params: OrderListParams = {}) =>
     apiFetch<Paginated<Order>>(`/orders${toQueryString(params)}`),
 
+  listAll: (params: OrderListParams = {}) =>
+    apiFetch<Paginated<Order>>(`/orders/admin${toQueryString(params)}`),
+
   get: (id: string) => apiFetch<Order>(`/orders/${id}`),
 
   create: () => apiFetch<Order>("/orders", { method: "POST", body: {} }),
+
+  updateStatus: (id: string, status: OrderStatus) =>
+    apiFetch<Order>(`/orders/${id}/status`, { method: "PATCH", body: { status } }),
 };
 
 export const usersApi = {
+  list: (params: { page?: number; limit?: number } = {}) =>
+    apiFetch<Paginated<User>>(`/users${toQueryString(params)}`),
+
   update: (id: string, data: { name?: string; email?: string }) =>
     apiFetch<User>(`/users/${id}`, { method: "PATCH", body: data }),
+
+  remove: (id: string) => apiFetch<void>(`/users/${id}`, { method: "DELETE" }),
 };

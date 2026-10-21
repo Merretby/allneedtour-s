@@ -27,6 +27,19 @@ export class OrdersController {
     sendSuccess(reply, result);
   }
 
+  async getAllOrders(
+    request: FastifyRequest<{ Querystring: { page?: string; limit?: string } }>,
+    reply: FastifyReply
+  ): Promise<void> {
+    if (request.user!.role !== 'admin') {
+      throw AppError.forbidden('Admin access required');
+    }
+    const page = request.query.page ? parseInt(request.query.page) : undefined;
+    const limit = request.query.limit ? parseInt(request.query.limit) : undefined;
+    const result = await this.service.getAllOrders({ page, limit });
+    sendSuccess(reply, result);
+  }
+
   async createOrder(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const userId = request.user!.userId;
     const order = await this.service.createOrder(userId);
@@ -40,8 +53,7 @@ export class OrdersController {
     if (request.user!.role !== 'admin') {
       throw AppError.forbidden('Admin access required');
     }
-    const userId = request.user!.userId;
-    const order = await this.service.updateOrderStatus(userId, request.params.id, request.body.status);
+    const order = await this.service.updateOrderStatus(request.params.id, request.body.status);
     sendSuccess(reply, order);
   }
 }

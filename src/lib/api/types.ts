@@ -21,6 +21,17 @@ export interface Product {
   updated_at: string;
 }
 
+export interface ProductInput {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  category: string;
+  image_url?: string;
+  brand?: string;
+  compare_at_price?: number;
+}
+
 export interface CartItem {
   id: string;
   user_id: string;
@@ -59,6 +70,7 @@ export type OrderStatus =
   | "pending"
   | "confirmed"
   | "shipped"
+  | "on_livraison"
   | "delivered"
   | "cancelled";
 

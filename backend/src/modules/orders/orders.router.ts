@@ -16,6 +16,13 @@ export async function ordersRouter(fastify: FastifyInstance): Promise<void> {
   const service = new OrdersService(ordersRepository, cartRepository, productsRepository);
   const controller = new OrdersController(service);
 
+  // Static routes must be registered before the dynamic '/:id' route.
+  fastify.get(
+    '/admin',
+    { preHandler: [authenticate] },
+    controller.getAllOrders.bind(controller) as unknown as RouteHandlerMethod
+  );
+
   fastify.get('/', { preHandler: [authenticate] }, controller.getOrders.bind(controller) as unknown as RouteHandlerMethod);
 
   fastify.get('/:id', { preHandler: [authenticate] }, controller.getOrder.bind(controller) as unknown as RouteHandlerMethod);

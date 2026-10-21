@@ -29,7 +29,8 @@ export function computeShipping(subtotal: number): number {
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   pending: "En attente",
   confirmed: "Confirmée",
-  shipped: "Expédiée",
+  shipped: "En cours de livraison",
+  on_livraison: "En cours de livraison",
   delivered: "Livrée",
   cancelled: "Annulée",
 };

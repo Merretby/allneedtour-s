@@ -29,6 +29,12 @@ export class OrdersService {
     return createPaginatedResult(orders, total, page, limit);
   }
 
+  async getAllOrders(params: PaginationParams) {
+    const { page, limit, offset } = calculatePagination(params);
+    const { orders, total } = await this.repository.findAll(limit, offset);
+    return createPaginatedResult(orders, total, page, limit);
+  }
+
   async createOrder(userId: string): Promise<OrderWithItems> {
     const cartItems = await this.cartRepository.findByUserId(userId);
 
@@ -80,9 +86,10 @@ export class OrdersService {
     return createdOrder;
   }
 
-  async updateOrderStatus(userId: string, orderId: string, status: Order['status']): Promise<Order> {
+  // Admin-only: callers must verify the admin role before calling this.
+  async updateOrderStatus(orderId: string, status: Order['status']): Promise<Order> {
     const order = await this.repository.findById(orderId);
-    if (!order || order.user_id !== userId) {
+    if (!order) {
       throw AppError.notFound('Order not found', ErrorCodes.ORDER_NOT_FOUND);
     }
     return this.repository.updateStatus(orderId, status);
