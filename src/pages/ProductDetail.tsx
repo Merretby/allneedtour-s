@@ -10,7 +10,12 @@ import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useAddToCart, useFavorites, useProduct, useToggleFavorite } from "@/lib/api/hooks";
-import { formatPrice, resolveImageUrl, toNumber } from "@/lib/format";
+import {
+  discountPercent,
+  formatPrice,
+  resolveImageUrl,
+  toNumber,
+} from "@/lib/format";
 import { ApiError } from "@/lib/api/client";
 
 const ProductDetail = () => {
@@ -100,6 +105,7 @@ const ProductDetail = () => {
 
   const price = toNumber(product.price);
   const compareAt = toNumber(product.compare_at_price);
+  const promo = discountPercent(price, compareAt);
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,12 +144,17 @@ const ProductDetail = () => {
 
             <p className="text-muted-foreground">{product.description}</p>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="text-3xl font-bold text-foreground">{formatPrice(price)}</span>
-              {compareAt > price && (
-                <span className="text-xl text-muted-foreground line-through">
-                  {formatPrice(compareAt)}
-                </span>
+              {promo !== null && (
+                <>
+                  <span className="text-xl text-muted-foreground line-through">
+                    {formatPrice(compareAt)}
+                  </span>
+                  <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive">
+                    Promo -{promo} %
+                  </Badge>
+                </>
               )}
             </div>
 

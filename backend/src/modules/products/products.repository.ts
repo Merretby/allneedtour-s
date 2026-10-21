@@ -22,7 +22,7 @@ export interface CreateProductInput {
   category: string;
   image_url?: string;
   brand?: string;
-  compare_at_price?: number;
+  compare_at_price?: number | null;
 }
 
 export interface UpdateProductInput {
@@ -33,7 +33,7 @@ export interface UpdateProductInput {
   category?: string;
   image_url?: string;
   brand?: string;
-  compare_at_price?: number;
+  compare_at_price?: number | null;
 }
 
 export class ProductsRepository {

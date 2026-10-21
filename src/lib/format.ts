@@ -13,6 +13,16 @@ export function formatPrice(value: number | string | null | undefined): string {
   return `${formatted} Dhs`;
 }
 
+export function discountPercent(
+  price: number | string | null | undefined,
+  compareAt: number | string | null | undefined
+): number | null {
+  const current = toNumber(price);
+  const original = toNumber(compareAt);
+  if (current <= 0 || original <= current) return null;
+  return Math.round(((original - current) / original) * 100);
+}
+
 export function resolveImageUrl(url?: string | null): string {
   if (!url) return "/placeholder.svg";
   if (/^(https?:\/\/|blob:|data:)/.test(url)) return url;

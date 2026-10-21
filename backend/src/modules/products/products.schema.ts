@@ -6,9 +6,10 @@ export const createProductSchema = z.object({
   price: z.number().nonnegative(),
   stock: z.number().int().nonnegative(),
   category: z.string().min(1),
-  image_url: z.string().url().optional(),
+  // Accept both absolute URLs (uploads) and local paths (e.g. /products/foo.jpg).
+  image_url: z.string().min(1).optional(),
   brand: z.string().optional(),
-  compare_at_price: z.number().nonnegative().optional(),
+  compare_at_price: z.number().nonnegative().nullable().optional(),
 });
 
 export const updateProductSchema = createProductSchema.partial();

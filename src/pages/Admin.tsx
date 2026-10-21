@@ -35,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
@@ -49,6 +50,7 @@ import {
   useUpdateProduct,
 } from "@/lib/api/hooks";
 import { productsApi } from "@/lib/api/endpoints";
+import { ApiError } from "@/lib/api/client";
 import type {
   Order,
   OrderStatus,
@@ -56,6 +58,7 @@ import type {
   ProductInput,
 } from "@/lib/api/types";
 import {
+  discountPercent,
   formatDate,
   formatPrice,
   orderStatusLabel,
@@ -83,27 +86,44 @@ const statusClasses: Record<string, string> = {
 interface ProductFormState {
   name: string;
   description: string;
-  price: string;
+  normal_price: string;
+  promo_price: string;
+  is_promo: boolean;
   stock: string;
   category: string;
   brand: string;
   image_url: string;
-  compare_at_price: string;
 }
 
 const EMPTY_FORM: ProductFormState = {
   name: "",
   description: "",
-  price: "",
+  normal_price: "",
+  promo_price: "",
+  is_promo: false,
   stock: "",
   category: "",
   brand: "",
   image_url: "",
-  compare_at_price: "",
 };
 
-const errorMessage = (error: unknown) =>
-  error instanceof Error ? error.message : "Une erreur est survenue";
+const errorMessage = (error: unknown) => {
+  if (error instanceof ApiError && Array.isArray(error.details)) {
+    const fields = error.details
+      .map((detail) =>
+        detail && typeof detail === "object" && "path" in detail
+          ? (detail as { path?: unknown }).path
+          : null
+      )
+      .flatMap((path) => (Array.isArray(path) ? [path.join(".")] : []));
+
+    if (fields.length > 0) {
+      return `${error.message} : ${fields.join(", ")}`;
+    }
+  }
+
+  return error instanceof Error ? error.message : "Une erreur est survenue";
+};
 
 const Admin = () => {
   const { user } = useAuth();
@@ -222,6 +242,10 @@ const Admin = () => {
   };
 
   const startEdit = (product: Product) => {
+    const price = toNumber(product.price);
+    const compareAt = toNumber(product.compare_at_price);
+    const hasPromo = compareAt > price;
+
     releasePreview();
     setImageFile(null);
     setImagePreview(product.image_url ?? "");
@@ -230,13 +254,13 @@ const Admin = () => {
     setForm({
       name: product.name,
       description: product.description ?? "",
-      price: String(toNumber(product.price)),
+      normal_price: String(hasPromo ? compareAt : price),
+      promo_price: hasPromo ? String(price) : "",
+      is_promo: hasPromo,
       stock: String(product.stock),
       category: product.category ?? "",
       brand: product.brand ?? "",
       image_url: product.image_url ?? "",
-      compare_at_price:
-        product.compare_at_price != null ? String(product.compare_at_price) : "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -244,20 +268,34 @@ const Admin = () => {
   const submitProduct = async (event: FormEvent) => {
     event.preventDefault();
 
-    const price = Number(form.price);
+    const normalPrice = Number(form.normal_price);
+    const promoPrice = Number(form.promo_price);
     const stock = Number(form.stock);
 
     if (
       !form.name.trim() ||
       !form.description.trim() ||
       !form.category.trim() ||
-      form.price.trim() === "" ||
+      form.normal_price.trim() === "" ||
       form.stock.trim() === "" ||
-      !Number.isFinite(price) ||
+      !Number.isFinite(normalPrice) ||
+      normalPrice < 0 ||
       !Number.isFinite(stock)
     ) {
       toast.error("Veuillez remplir correctement les champs obligatoires");
       return;
+    }
+
+    if (form.is_promo) {
+      if (
+        form.promo_price.trim() === "" ||
+        !Number.isFinite(promoPrice) ||
+        promoPrice <= 0 ||
+        promoPrice >= normalPrice
+      ) {
+        toast.error("Le prix promo doit être inférieur au prix normal");
+        return;
+      }
     }
 
     let imageUrl = form.image_url.trim();
@@ -278,16 +316,13 @@ const Admin = () => {
     const payload: ProductInput = {
       name: form.name.trim(),
       description: form.description.trim(),
-      price,
+      price: form.is_promo ? promoPrice : normalPrice,
+      compare_at_price: form.is_promo ? normalPrice : null,
       stock,
       category: form.category.trim(),
     };
     if (form.brand.trim()) payload.brand = form.brand.trim();
     if (imageUrl) payload.image_url = imageUrl;
-    if (form.compare_at_price.trim()) {
-      const compare = Number(form.compare_at_price);
-      if (Number.isFinite(compare)) payload.compare_at_price = compare;
-    }
 
     const onSuccess = () => {
       toast.success(editingId ? "Produit mis à jour" : "Produit ajouté");
@@ -323,6 +358,13 @@ const Admin = () => {
 
   const isSavingProduct =
     createProduct.isPending || updateProductMutation.isPending || isUploading;
+
+  const formNormalPrice = Number(form.normal_price);
+  const formPromoPrice = Number(form.promo_price);
+  const formDiscount =
+    form.is_promo && Number.isFinite(formNormalPrice) && Number.isFinite(formPromoPrice)
+      ? discountPercent(formPromoPrice, formNormalPrice)
+      : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -599,14 +641,16 @@ const Admin = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="product-price">Prix (Dhs) *</Label>
+                    <Label htmlFor="product-price">Prix normal (Dhs) *</Label>
                     <Input
                       id="product-price"
                       type="number"
                       min="0"
                       step="0.01"
-                      value={form.price}
-                      onChange={(e) => setForm({ ...form, price: e.target.value })}
+                      value={form.normal_price}
+                      onChange={(e) =>
+                        setForm({ ...form, normal_price: e.target.value })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -678,20 +722,64 @@ const Admin = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="product-compare">Prix barré (Dhs)</Label>
-                    <Input
-                      id="product-compare"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.compare_at_price}
-                      onChange={(e) =>
-                        setForm({ ...form, compare_at_price: e.target.value })
-                      }
-                    />
+                  <div className="space-y-4 rounded-lg border bg-muted/30 p-4 md:col-span-2">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="product-promo">Mettre en promotion</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Le client verra le prix normal barré et le prix promo.
+                        </p>
+                      </div>
+                      <Switch
+                        id="product-promo"
+                        checked={form.is_promo}
+                        onCheckedChange={(checked) =>
+                          setForm({ ...form, is_promo: checked })
+                        }
+                        disabled={isSavingProduct}
+                      />
+                    </div>
+
+                    {form.is_promo && (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="product-promo-price">Prix promo (Dhs) *</Label>
+                          <Input
+                            id="product-promo-price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={form.promo_price}
+                            onChange={(e) =>
+                              setForm({ ...form, promo_price: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="flex flex-col justify-end">
+                          <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm">
+                            {formDiscount !== null ? (
+                              <>
+                                <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive">
+                                  -{formDiscount} %
+                                </Badge>
+                                <span className="font-semibold">
+                                  {formatPrice(formPromoPrice)}
+                                </span>
+                                <span className="text-muted-foreground line-through">
+                                  {formatPrice(formNormalPrice)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-muted-foreground">
+                                Le prix promo doit être inférieur au prix normal.
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-end gap-2">
+                  <div className="flex items-end gap-2 md:col-span-2">
                     <Button type="submit" disabled={isSavingProduct}>
                       <Check className="h-4 w-4 mr-2" />
                       {isUploading
@@ -742,41 +830,65 @@ const Admin = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    products.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={resolveImageUrl(product.image_url)}
-                              alt={product.name}
-                              className="w-10 h-10 rounded object-cover"
-                            />
-                            <span className="font-medium">{product.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{product.category}</TableCell>
-                        <TableCell>{formatPrice(product.price)}</TableCell>
-                        <TableCell>{product.stock}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={() => startEdit(product)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={() => removeProduct(product)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    products.map((product) => {
+                      const promo = discountPercent(
+                        product.price,
+                        product.compare_at_price
+                      );
+                      return (
+                        <TableRow key={product.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={resolveImageUrl(product.image_url)}
+                                alt={product.name}
+                                className="w-10 h-10 rounded object-cover"
+                              />
+                              <span className="font-medium">{product.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{product.category}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">
+                                  {formatPrice(product.price)}
+                                </span>
+                                {promo !== null && (
+                                  <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive">
+                                    Promo -{promo} %
+                                  </Badge>
+                                )}
+                              </div>
+                              {promo !== null && (
+                                <span className="text-xs text-muted-foreground line-through">
+                                  {formatPrice(product.compare_at_price)}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{product.stock}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => startEdit(product)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => removeProduct(product)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>

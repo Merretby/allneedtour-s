@@ -29,7 +29,7 @@ export interface ProductInput {
   category: string;
   image_url?: string;
   brand?: string;
-  compare_at_price?: number;
+  compare_at_price?: number | null;
 }
 
 export interface CartItem {
