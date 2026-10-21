@@ -55,6 +55,59 @@ export class ProductsController {
     sendSuccess(reply, result);
   }
 
+  async proxyImage(
+    request: FastifyRequest<{ Querystring: { url?: string } }>,
+    reply: FastifyReply
+  ): Promise<void> {
+    const rawUrl = request.query.url;
+    if (!rawUrl) {
+      throw AppError.badRequest('Image URL is required');
+    }
+
+    let imageUrl: URL;
+    try {
+      imageUrl = new URL(rawUrl);
+    } catch {
+      throw AppError.badRequest('Invalid image URL');
+    }
+
+    if (
+      imageUrl.protocol !== 'https:' ||
+      !['universparadiscount.ma', 'www.universparadiscount.ma'].includes(
+        imageUrl.hostname
+      )
+    ) {
+      throw AppError.badRequest('Image host is not allowed');
+    }
+
+    const response = await fetch(imageUrl, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) {
+      throw AppError.notFound('Product image not found');
+    }
+
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.startsWith('image/')) {
+      throw AppError.badRequest('Remote resource is not an image');
+    }
+
+    const contentLength = Number(response.headers.get('content-length') ?? 0);
+    if (contentLength > 5 * 1024 * 1024) {
+      throw AppError.badRequest('Product image is too large');
+    }
+
+    const image = Buffer.from(await response.arrayBuffer());
+    if (image.length > 5 * 1024 * 1024) {
+      throw AppError.badRequest('Product image is too large');
+    }
+
+    reply
+      .header('Cache-Control', 'public, max-age=86400')
+      .type(contentType)
+      .send(image);
+  }
+
   async uploadImage(
     request: FastifyRequest,
     reply: FastifyReply

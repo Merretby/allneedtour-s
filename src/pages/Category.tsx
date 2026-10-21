@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { Button } from "@/components/ui/button";
 import { useProducts } from "@/lib/api/hooks";
 import { toNumber } from "@/lib/format";
 
@@ -33,8 +35,17 @@ const Category = () => {
   const { slug } = useParams();
   const categoryName = categoryNames[slug || ""] || "Produits";
   const backendCategory = slug ? categoryFilter[slug] : undefined;
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError } = useProducts({ category: backendCategory, limit: 100 });
+  const { data, isLoading, isError } = useProducts({
+    category: backendCategory,
+    page,
+    limit: 100,
+  });
+
+  useEffect(() => {
+    setPage(1);
+  }, [slug]);
 
   let products = data?.data ?? [];
   if (slug === "bons-plans") {
@@ -71,6 +82,30 @@ const Category = () => {
             <p className="text-muted-foreground">
               Aucun produit dans cette catégorie pour le moment.
             </p>
+          </div>
+        )}
+
+        {data?.pagination && data.pagination.totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1 || isLoading}
+              onClick={() => setPage((current) => current - 1)}
+            >
+              Précédent
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {data.pagination.page} sur {data.pagination.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === data.pagination.totalPages || isLoading}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Suivant
+            </Button>
           </div>
         )}
       </main>

@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "@/lib/api/client";
+
 export function toNumber(value: number | string | null | undefined): number {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   if (typeof value === "string") {
@@ -25,6 +27,21 @@ export function discountPercent(
 
 export function resolveImageUrl(url?: string | null): string {
   if (!url) return "/placeholder.svg";
+  if (/^https?:\/\//.test(url)) {
+    try {
+      const parsed = new URL(url);
+      if (
+        parsed.protocol === "https:" &&
+        ["universparadiscount.ma", "www.universparadiscount.ma"].includes(
+          parsed.hostname
+        )
+      ) {
+        return `${API_BASE_URL}/products/image?url=${encodeURIComponent(url)}`;
+      }
+    } catch {
+      return "/placeholder.svg";
+    }
+  }
   if (/^(https?:\/\/|blob:|data:)/.test(url)) return url;
   return url.startsWith("/") ? url : `/${url}`;
 }

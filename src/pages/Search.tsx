@@ -7,12 +7,14 @@ import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { Button } from "@/components/ui/button";
 import { useProducts } from "@/lib/api/hooks";
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 300);
@@ -29,10 +31,16 @@ const Search = () => {
 
   const { data, isLoading, isError } = useProducts({
     search: debouncedQuery || undefined,
+    page,
     limit: 60,
   });
 
   const products = data?.data ?? [];
+  const totalResults = data?.pagination.total ?? 0;
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedQuery]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
@@ -63,10 +71,10 @@ const Search = () => {
         {debouncedQuery && !isLoading && (
           <div className="mb-6">
             <p className="text-lg text-muted-foreground">
-              {products.length > 0 ? (
+              {totalResults > 0 ? (
                 <>
-                  <span className="font-semibold text-foreground">{products.length}</span> résultat
-                  {products.length > 1 ? "s" : ""} pour "
+                  <span className="font-semibold text-foreground">{totalResults}</span> résultat
+                  {totalResults > 1 ? "s" : ""} pour "
                   <span className="font-semibold text-foreground">{debouncedQuery}</span>"
                 </>
               ) : (
@@ -101,6 +109,30 @@ const Search = () => {
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
+          </div>
+        )}
+
+        {data?.pagination && data.pagination.totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1 || isLoading}
+              onClick={() => setPage((current) => current - 1)}
+            >
+              Précédent
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {data.pagination.page} sur {data.pagination.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === data.pagination.totalPages || isLoading}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Suivant
+            </Button>
           </div>
         )}
       </div>
