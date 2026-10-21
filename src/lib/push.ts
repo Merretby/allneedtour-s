@@ -65,19 +65,104 @@ export async function ensureSubscription(): Promise<boolean> {
   let subscription = await registration.pushManager.getSubscription();
 
   if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey),
-    });
+    try {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+    } catch (error) {
+      console.error("[push] Subscription failed", {
+        error,
+        permission: Notification.permission,
+        secureContext: window.isSecureContext,
+        embedded: window.self !== window.top,
+      });
+
+      const name = error instanceof DOMException ? error.name : "";
+
+      throw new Error(
+        name === "AbortError"
+          ? "Le navigateur n'a pas pu joindre son service de notifications push. Essayez Chrome ou Edge, quittez le mode privé, et vérifiez que le push n'est pas désactivé (Brave : activez « Utiliser les services Google pour la messagerie push »)."
+          : "Impossible de créer l'abonnement aux notifications."
+      );
+    }
   }
 
   await notificationsApi.subscribe(subscription.toJSON());
   return true;
 }
 
+async function hasPushSubscription(): Promise<boolean> {
+  if (!isPushSupported()) return false;
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration("/");
+    const subscription = await registration?.pushManager.getSubscription();
+    return Boolean(subscription);
+  } catch {
+    return false;
+  }
+}
+
+async function showLocalNotification(
+  title: string,
+  options: NotificationOptions & { data?: { url?: string } }
+): Promise<void> {
+  if (!("Notification" in window) || Notification.permission !== "granted") {
+    return;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration("/");
+
+    if (registration) {
+      await registration.showNotification(title, {
+        icon: "/logo_para.svg",
+        badge: "/favicon.ico",
+        ...options,
+      });
+    } else {
+      new Notification(title, { icon: "/logo_para.svg", ...options });
+    }
+  } catch {
+    // Local notifications are best-effort.
+  }
+}
+
+/**
+ * Fallback for browsers whose push service is unavailable: while the page is
+ * open but hidden (another tab), show a desktop notification through the
+ * service worker. Skipped when a real push subscription exists, to avoid
+ * duplicate notifications.
+ */
+export async function notifyIfPageHidden(
+  title: string,
+  options: NotificationOptions & { data?: { url?: string } }
+): Promise<void> {
+  if (typeof document === "undefined" || document.visibilityState === "visible") {
+    return;
+  }
+
+  if (await hasPushSubscription()) return;
+
+  await showLocalNotification(title, options);
+}
+
 export async function enablePush(): Promise<void> {
   if (!isPushSupported()) {
     throw new Error("Les notifications ne sont pas supportées par ce navigateur.");
+  }
+
+  if (!window.isSecureContext) {
+    throw new Error(
+      "Les notifications nécessitent HTTPS (ou localhost). Ouvrez l'application via une adresse sécurisée."
+    );
+  }
+
+  if (window.self !== window.top) {
+    throw new Error(
+      "Ouvrez l'application dans un onglet dédié (pas dans un aperçu intégré) pour activer les notifications."
+    );
   }
 
   if (Notification.permission === "denied") {

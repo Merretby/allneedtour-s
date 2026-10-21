@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { API_BASE_URL } from "@/lib/api/client";
 import { orderStatusLabel } from "@/lib/format";
+import { notifyIfPageHidden } from "@/lib/push";
 
 interface OrderStatusPayload {
   orderId: string;
@@ -63,8 +64,12 @@ export function useNotificationStream(): void {
         queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
 
         if (data.actorId !== user?.id) {
-          toast.info("Commande mise à jour", {
-            description: `Nouveau statut : ${orderStatusLabel(data.status)}`,
+          const body = `Nouveau statut : ${orderStatusLabel(data.status)}`;
+          toast.info("Commande mise à jour", { description: body });
+          void notifyIfPageHidden("Commande mise à jour", {
+            body,
+            data: { url: "/orders" },
+            tag: `order-${data.orderId}`,
           });
         }
         return;
@@ -75,10 +80,14 @@ export function useNotificationStream(): void {
         queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
 
         if (user?.role === "admin") {
-          toast.success("Nouvelle commande", {
-            description: `Commande #${data.orderId.slice(0, 8)} — ${Number(
-              data.total
-            ).toFixed(2)} Dhs`,
+          const body = `Commande #${data.orderId.slice(0, 8)} — ${Number(
+            data.total
+          ).toFixed(2)} Dhs`;
+          toast.success("Nouvelle commande", { description: body });
+          void notifyIfPageHidden("Nouvelle commande", {
+            body,
+            data: { url: "/admin" },
+            tag: `new-order-${data.orderId}`,
           });
         }
       }
