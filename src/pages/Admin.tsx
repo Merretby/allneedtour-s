@@ -130,7 +130,6 @@ const Admin = () => {
   const { user } = useAuth();
 
   const ordersQuery = useAllOrders();
-  const productsQuery = useAdminProducts();
   const usersQuery = useAdminUsers();
 
   const updateStatus = useUpdateOrderStatus();
@@ -139,9 +138,12 @@ const Admin = () => {
   const deleteProduct = useDeleteProduct();
   const deleteUser = useDeleteUser();
 
+  const [productPage, setProductPage] = useState(1);
+  const productsQuery = useAdminProducts(productPage);
   const orders = ordersQuery.data?.data ?? [];
   const products = productsQuery.data?.data ?? [];
   const users = usersQuery.data?.data ?? [];
+  const productPagination = productsQuery.data?.pagination;
 
   const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
   const [clientFilter, setClientFilter] = useState<string | null>(null);
@@ -425,7 +427,7 @@ const Admin = () => {
               <Boxes className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{products.length}</p>
+              <p className="text-2xl font-bold">{productPagination?.total ?? 0}</p>
             </CardContent>
           </Card>
         </div>
@@ -895,6 +897,32 @@ const Admin = () => {
                 </TableBody>
               </Table>
             </div>
+            {productPagination && productPagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={productPage === 1 || productsQuery.isFetching}
+                  onClick={() => setProductPage((page) => page - 1)}
+                >
+                  Précédent
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {productPagination.page} sur {productPagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    productPage === productPagination.totalPages ||
+                    productsQuery.isFetching
+                  }
+                  onClick={() => setProductPage((page) => page + 1)}
+                >
+                  Suivant
+                </Button>
+              </div>
+            )}
           </TabsContent>
 
           {/* ----------------------------- Black Friday ---------------------------- */}

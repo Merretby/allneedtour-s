@@ -184,13 +184,13 @@ export function useUpdateOrderStatus() {
   });
 }
 
-export function useAdminProducts() {
+export function useAdminProducts(page = 1) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["admin", "products"],
+    queryKey: ["admin", "products", page],
     // Base pricing: admins must always see the normal price, never the
     // Black Friday price that customers see while a campaign runs.
-    queryFn: () => productsApi.list({ limit: 100, pricing: "base" }),
+    queryFn: () => productsApi.list({ page, limit: 100, pricing: "base" }),
     enabled: user?.role === "admin",
   });
 }
