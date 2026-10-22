@@ -16,7 +16,12 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(input.password, 10);
-    const user = await this.repository.createUser(input.email, input.name, passwordHash);
+    const user = await this.repository.createUser(
+      input.email,
+      input.name,
+      input.phone,
+      passwordHash
+    );
 
     const token = this.generateToken(user.id, user.email, user.role);
 

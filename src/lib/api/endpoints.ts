@@ -42,7 +42,7 @@ export const authApi = {
   login: (input: { email: string; password: string }) =>
     apiFetch<AuthResponse>("/auth/login", { method: "POST", body: input, auth: false }),
 
-  register: (input: { email: string; password: string; name: string }) =>
+  register: (input: { email: string; password: string; name: string; phone: string }) =>
     apiFetch<AuthResponse>("/auth/register", { method: "POST", body: input, auth: false }),
 
   me: () => apiFetch<User>("/auth/me"),

@@ -4,6 +4,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  phone: string | null;
   password_hash: string;
   role: 'customer' | 'admin';
   created_at: string;
@@ -22,12 +23,18 @@ export class AuthRepository {
     return data;
   }
 
-  async createUser(email: string, name: string, passwordHash: string): Promise<User> {
+  async createUser(
+    email: string,
+    name: string,
+    phone: string,
+    passwordHash: string
+  ): Promise<User> {
     const { data, error } = await supabase
       .from('users')
       .insert({
         email,
         name,
+        phone,
         password_hash: passwordHash,
       })
       .select()

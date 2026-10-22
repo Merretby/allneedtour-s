@@ -20,6 +20,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
   const redirectTo = (location.state as LocationState | null)?.from || "/";
@@ -58,7 +59,12 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await register({ email, password, name: name || email.split("@")[0] });
+      await register({
+        email,
+        password,
+        name: name || email.split("@")[0],
+        phone,
+      });
       toast.success("Compte créé avec succès!");
       navigate(redirectTo, { replace: true });
     } catch (error) {
@@ -140,6 +146,19 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-phone">Numéro de téléphone</Label>
+                <Input
+                  id="signup-phone"
+                  type="tel"
+                  placeholder="06 12 34 56 78"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  minLength={6}
+                  maxLength={30}
                 />
               </div>
               <div className="space-y-2">

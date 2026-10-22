@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, User, Heart, ShoppingCart, Tag, Package, MessageSquare, MapPin, Gift, CreditCard, Store, Clock, Shield, LogOut } from "lucide-react";
+import { Search, User, Heart, ShoppingCart, Tag, Package, MessageSquare, MapPin, Gift, CreditCard, Store, Clock, Shield, LogOut, LayoutDashboard } from "lucide-react";
 import NotificationToggle from "@/components/NotificationToggle";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -157,6 +157,16 @@ const Header = () => {
                   <NotificationToggle />
                   
                   <DropdownMenuSeparator />
+
+                  {user?.role === "admin" && (
+                    <DropdownMenuItem
+                      onClick={() => navigate("/admin")}
+                      className="cursor-pointer py-2"
+                    >
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <span>Administration</span>
+                    </DropdownMenuItem>
+                  )}
                   
                   <DropdownMenuItem className="cursor-pointer py-2">
                     <User className="mr-2 h-4 w-4" />

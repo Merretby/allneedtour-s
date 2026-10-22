@@ -150,7 +150,7 @@ export function useUpdateProfile() {
   const { user, updateUser } = useAuth();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name?: string; email?: string }) => {
+    mutationFn: (data: { name?: string; email?: string; phone?: string }) => {
       if (!user) throw new Error("Not authenticated");
       return usersApi.update(user.id, data);
     },

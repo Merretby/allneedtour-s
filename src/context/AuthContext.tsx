@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { authApi } from "@/lib/api/endpoints";
+import { ApiError } from "@/lib/api/client";
 import type { AuthResponse, User } from "@/lib/api/types";
 import {
   AUTH_STORAGE_KEY,
@@ -26,6 +27,7 @@ interface LoginInput {
 
 interface RegisterInput extends LoginInput {
   name: string;
+  phone: string;
 }
 
 interface AuthContextValue {
@@ -44,9 +46,32 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [auth, setAuth] = useState<StoredAuth | null>(() => readAuthStorage());
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     clearLegacyDemoStorage();
+
+    if (auth?.token) {
+      setIsLoading(true);
+      authApi
+        .me()
+        .then((user) => {
+          const next = { token: auth.token, user };
+          writeAuthStorage(next);
+          setAuth(next);
+        })
+        .catch((error: unknown) => {
+          if (error instanceof ApiError && error.status === 401) {
+            clearAuthStorage();
+            setAuth(null);
+          } else {
+            console.error("Could not refresh the authenticated user", error);
+          }
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
+    }
 
     const handleStorage = (event: StorageEvent) => {
       if (event.key !== AUTH_STORAGE_KEY) return;
@@ -55,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+  }, [auth?.token]);
 
   const persist = useCallback((next: StoredAuth) => {
     writeAuthStorage(next);
@@ -102,13 +127,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: auth?.user ?? null,
       token: auth?.token ?? null,
       isAuthenticated: Boolean(auth?.token),
-      isLoading: false,
+      isLoading,
       login,
       register,
       logout,
       updateUser,
     }),
-    [auth, login, register, logout, updateUser]
+    [auth, isLoading, login, register, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

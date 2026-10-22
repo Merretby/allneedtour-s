@@ -4,6 +4,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  phone: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -12,7 +13,7 @@ export class UsersRepository {
   async findById(id: string): Promise<User | null> {
     const { data, error } = await supabase
       .from('users')
-      .select('id, email, name, created_at, updated_at')
+      .select('id, email, name, phone, created_at, updated_at')
       .eq('id', id)
       .single();
 
@@ -24,7 +25,7 @@ export class UsersRepository {
     const [{ data: users }, { count }] = await Promise.all([
       supabase
         .from('users')
-        .select('id, email, name, created_at, updated_at')
+        .select('id, email, name, phone, created_at, updated_at')
         .range(offset, offset + limit - 1),
       supabase
         .from('users')
@@ -37,12 +38,15 @@ export class UsersRepository {
     };
   }
 
-  async update(id: string, data: { name?: string; email?: string }): Promise<User> {
+  async update(
+    id: string,
+    data: { name?: string; email?: string; phone?: string }
+  ): Promise<User> {
     const { data: user, error } = await supabase
       .from('users')
       .update(data)
       .eq('id', id)
-      .select('id, email, name, created_at, updated_at')
+      .select('id, email, name, phone, created_at, updated_at')
       .single();
 
     if (error) throw error;

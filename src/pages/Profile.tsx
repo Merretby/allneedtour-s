@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Edit2, Package, Heart } from "lucide-react";
+import { User, Mail, Phone, Edit2, Package, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TopBar from "@/components/TopBar";
@@ -23,10 +23,12 @@ const Profile = () => {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
 
   useEffect(() => {
     setName(user?.name ?? "");
     setEmail(user?.email ?? "");
+    setPhone(user?.phone ?? "");
   }, [user]);
 
   const orderCount = orders?.data.length ?? 0;
@@ -34,7 +36,7 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      await updateProfile.mutateAsync({ name, email });
+      await updateProfile.mutateAsync({ name, email, phone });
       setEditing(false);
       toast.success("Profil mis à jour avec succès");
     } catch (error) {
@@ -112,6 +114,24 @@ const Profile = () => {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
+                    <Phone className="inline h-4 w-4 mr-2" />
+                    Numéro de téléphone
+                  </label>
+                  {editing ? (
+                    <Input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      minLength={6}
+                      maxLength={30}
+                    />
+                  ) : (
+                    <p className="text-foreground font-medium">{user?.phone || "—"}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
                     <Mail className="inline h-4 w-4 mr-2" />
                     Email
                   </label>
@@ -137,6 +157,7 @@ const Profile = () => {
                         setEditing(false);
                         setName(user?.name ?? "");
                         setEmail(user?.email ?? "");
+                        setPhone(user?.phone ?? "");
                       }}
                       className="flex-1"
                     >

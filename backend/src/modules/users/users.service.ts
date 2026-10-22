@@ -20,7 +20,10 @@ export class UsersService {
     return createPaginatedResult(users, total, page, limit);
   }
 
-  async updateUser(id: string, data: { name?: string; email?: string }): Promise<User> {
+  async updateUser(
+    id: string,
+    data: { name?: string; email?: string; phone?: string }
+  ): Promise<User> {
     const user = await this.repository.findById(id);
     if (!user) {
       throw AppError.notFound('User not found', ErrorCodes.USER_NOT_FOUND);
