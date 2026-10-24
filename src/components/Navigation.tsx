@@ -187,6 +187,12 @@ const Navigation = () => {
               Black Friday
             </button>
           )}
+          <button
+            onClick={() => navigate("/products")}
+            className="inline-flex flex-shrink-0 items-center whitespace-nowrap text-sm font-medium text-foreground hover:text-primary smooth-transition"
+          >
+            Tous les produits
+          </button>
           {categories.map((category, index) => (
             <div
               key={category.slug}

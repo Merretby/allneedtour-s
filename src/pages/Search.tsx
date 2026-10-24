@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/lib/api/hooks";
+import { ApiError } from "@/lib/api/client";
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,11 +30,16 @@ const Search = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery]);
 
-  const { data, isLoading, isError } = useProducts({
+  const productsQuery = useProducts({
     search: debouncedQuery || undefined,
     page,
     limit: 60,
   });
+  const { data, isLoading, isError } = productsQuery;
+  const errorMessage =
+    productsQuery.error instanceof ApiError
+      ? productsQuery.error.message
+      : "Vérifiez que l'API est démarrée.";
 
   const products = data?.data ?? [];
   const totalResults = data?.pagination.total ?? 0;
@@ -93,7 +99,7 @@ const Search = () => {
 
         {isError && (
           <p className="text-center text-destructive py-16">
-            Impossible de charger les produits. Vérifiez que l'API est démarrée.
+            Impossible de charger les produits. {errorMessage}
           </p>
         )}
 

@@ -25,6 +25,11 @@ export async function productsRouter(fastify: FastifyInstance): Promise<void> {
     controller.proxyImage.bind(controller) as unknown as RouteHandlerMethod
   );
 
+  fastify.get(
+    '/stored-image',
+    controller.getStoredImage.bind(controller) as unknown as RouteHandlerMethod
+  );
+
   fastify.post(
     '/upload',
     { preHandler: [authenticate] },

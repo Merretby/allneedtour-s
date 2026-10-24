@@ -15,7 +15,12 @@ export async function notificationsRouter(fastify: FastifyInstance): Promise<voi
 
   fastify.get(
     '/stream',
-    { preHandler: [authenticate] },
+    {
+      config: {
+        rateLimit: false,
+      },
+      preHandler: [authenticate],
+    },
     controller.stream.bind(controller) as unknown as RouteHandlerMethod
   );
 

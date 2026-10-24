@@ -70,6 +70,10 @@ const ProductCard = ({ product, promoLabel = "Promo" }: ProductCardProps) => {
           src={resolveImageUrl(product.image_url)}
           alt={product.name}
           loading="lazy"
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = "/placeholder.svg";
+          }}
           className="w-full h-full object-cover group-hover:scale-110 smooth-transition"
         />
         <button

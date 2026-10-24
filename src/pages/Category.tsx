@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/lib/api/hooks";
+import { ApiError } from "@/lib/api/client";
 import { toNumber } from "@/lib/format";
 
 const categoryNames: Record<string, string> = {
@@ -96,11 +97,16 @@ const Category = () => {
   const backendCategory = slug ? categoryFilter[slug]?.join(",") : undefined;
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError } = useProducts({
+  const productsQuery = useProducts({
     category: backendCategory,
     page,
     limit: 100,
   });
+  const { data, isLoading, isError } = productsQuery;
+  const errorMessage =
+    productsQuery.error instanceof ApiError
+      ? productsQuery.error.message
+      : "Vérifiez que l'API est démarrée.";
 
   useEffect(() => {
     setPage(1);
@@ -124,7 +130,7 @@ const Category = () => {
 
         {isError && (
           <p className="text-center text-destructive py-16">
-            Impossible de charger les produits. Vérifiez que l'API est démarrée.
+            Impossible de charger les produits. {errorMessage}
           </p>
         )}
 

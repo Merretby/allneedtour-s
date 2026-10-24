@@ -120,6 +120,10 @@ const ProductDetail = () => {
             <img
               src={resolveImageUrl(product.image_url)}
               alt={product.name}
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = "/placeholder.svg";
+              }}
               className="w-full h-auto object-cover"
             />
           </div>

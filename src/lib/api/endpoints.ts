@@ -49,8 +49,10 @@ export const authApi = {
 };
 
 export const productsApi = {
-  list: (params: ProductListParams = {}) =>
-    apiFetch<Paginated<Product>>(`/products${toQueryString(params)}`, { auth: false }),
+  list: (params: ProductListParams = {}, options: { auth?: boolean } = {}) =>
+    apiFetch<Paginated<Product>>(`/products${toQueryString(params)}`, {
+      auth: options.auth ?? false,
+    }),
 
   get: (id: string) => apiFetch<Product>(`/products/${id}`, { auth: false }),
 

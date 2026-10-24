@@ -190,7 +190,11 @@ export function useAdminProducts(page = 1) {
     queryKey: ["admin", "products", page],
     // Base pricing: admins must always see the normal price, never the
     // Black Friday price that customers see while a campaign runs.
-    queryFn: () => productsApi.list({ page, limit: 100, pricing: "base" }),
+    queryFn: () =>
+      productsApi.list(
+        { page, limit: 100, pricing: "base" },
+        { auth: true }
+      ),
     enabled: user?.role === "admin",
   });
 }

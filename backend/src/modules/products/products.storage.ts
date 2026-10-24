@@ -16,8 +16,17 @@ const EXTENSIONS: Record<string, string> = {
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 async function ensureBucket(): Promise<void> {
-  const { error: getError } = await supabase.storage.getBucket(BUCKET);
-  if (!getError) return;
+  const { data: bucket, error: getError } = await supabase.storage.getBucket(BUCKET);
+  if (!getError && bucket) {
+    if (!bucket.public || bucket.file_size_limit !== MAX_IMAGE_BYTES) {
+      const { error } = await supabase.storage.updateBucket(BUCKET, {
+        public: true,
+        fileSizeLimit: MAX_IMAGE_BYTES,
+      });
+      if (error) throw error;
+    }
+    return;
+  }
 
   const { error } = await supabase.storage.createBucket(BUCKET, {
     public: true,
@@ -58,4 +67,23 @@ export async function uploadProductImage(
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
   return data.publicUrl;
+}
+
+export async function downloadProductImage(path: string): Promise<{
+  buffer: Buffer;
+  contentType: string;
+}> {
+  if (!/^products\/[a-f0-9-]+\.(jpg|png|webp|gif|avif)$/i.test(path)) {
+    throw AppError.badRequest('Invalid product image path');
+  }
+
+  const { data, error } = await supabase.storage.from(BUCKET).download(path);
+  if (error || !data) {
+    throw AppError.notFound('Product image not found');
+  }
+
+  return {
+    buffer: Buffer.from(await data.arrayBuffer()),
+    contentType: data.type || 'application/octet-stream',
+  };
 }

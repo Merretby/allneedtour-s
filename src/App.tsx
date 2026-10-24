@@ -17,6 +17,7 @@ import Favorites from "./pages/Favorites";
 import Profile from "./pages/Profile";
 import Contact from "./pages/Contact";
 import Search from "./pages/Search";
+import Catalog from "./pages/Catalog";
 import BlackFriday from "./pages/BlackFriday";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -77,6 +78,7 @@ const App = () => (
             />
             <Route path="/contact" element={<Contact />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/products" element={<Catalog />} />
             <Route path="/black-friday" element={<BlackFriday />} />
             <Route path="/category/:slug" element={<Category />} />
             <Route

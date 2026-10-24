@@ -30,6 +30,16 @@ export function resolveImageUrl(url?: string | null): string {
   if (/^https?:\/\//.test(url)) {
     try {
       const parsed = new URL(url);
+      const storageMarker = "/storage/v1/object/public/product-images/";
+      const storageIndex = parsed.pathname.indexOf(storageMarker);
+      if (storageIndex !== -1) {
+        const path = parsed.pathname.slice(
+          storageIndex + storageMarker.length
+        );
+        return `${API_BASE_URL}/products/stored-image?path=${encodeURIComponent(
+          path
+        )}`;
+      }
       if (
         parsed.protocol === "https:" &&
         ["universparadiscount.ma", "www.universparadiscount.ma"].includes(

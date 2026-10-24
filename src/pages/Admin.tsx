@@ -824,7 +824,8 @@ const Admin = () => {
                   ) : productsQuery.isError ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center text-destructive">
-                        Impossible de charger les produits.
+                        Impossible de charger les produits :{" "}
+                        {errorMessage(productsQuery.error)}
                       </TableCell>
                     </TableRow>
                   ) : products.length === 0 ? (
@@ -846,6 +847,10 @@ const Admin = () => {
                               <img
                                 src={resolveImageUrl(product.image_url)}
                                 alt={product.name}
+                                onError={(event) => {
+                                  event.currentTarget.onerror = null;
+                                  event.currentTarget.src = "/placeholder.svg";
+                                }}
                                 className="w-10 h-10 rounded object-cover"
                               />
                               <span className="font-medium">{product.name}</span>

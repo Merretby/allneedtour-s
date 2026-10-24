@@ -35,10 +35,12 @@ export async function errorHandler(
   }
 
   if ('statusCode' in error && error.statusCode) {
+    const errorWithCode = error as FastifyError & { code?: string };
     reply.status(error.statusCode).send({
       success: false,
       error: {
         message: error.message,
+        ...(errorWithCode.code ? { code: errorWithCode.code } : {}),
       },
     });
     return;

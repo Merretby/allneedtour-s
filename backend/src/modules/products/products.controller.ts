@@ -3,6 +3,7 @@ import { ProductsService } from './products.service.js';
 import { CreateProductInput, UpdateProductInput } from './products.repository.js';
 import { sendSuccess, sendCreated, sendNoContent } from '../../common/utils/http.js';
 import { AppError } from '../../common/errors/AppError.js';
+import { downloadProductImage } from './products.storage.js';
 
 export class ProductsController {
   constructor(private service: ProductsService) {}
@@ -106,6 +107,22 @@ export class ProductsController {
       .header('Cache-Control', 'public, max-age=86400')
       .type(contentType)
       .send(image);
+  }
+
+  async getStoredImage(
+    request: FastifyRequest<{ Querystring: { path?: string } }>,
+    reply: FastifyReply
+  ): Promise<void> {
+    const path = request.query.path;
+    if (!path) {
+      throw AppError.badRequest('Image path is required');
+    }
+
+    const image = await downloadProductImage(path);
+    reply
+      .header('Cache-Control', 'public, max-age=31536000, immutable')
+      .type(image.contentType)
+      .send(image.buffer);
   }
 
   async uploadImage(
