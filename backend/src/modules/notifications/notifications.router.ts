@@ -10,6 +10,11 @@ export async function notificationsRouter(fastify: FastifyInstance): Promise<voi
 
   fastify.get(
     '/public-key',
+    {
+      config: {
+        rateLimit: false,
+      },
+    },
     controller.getPublicKey.bind(controller) as unknown as RouteHandlerMethod
   );
 

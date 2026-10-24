@@ -16,17 +16,32 @@ export async function productsRouter(fastify: FastifyInstance): Promise<void> {
 
   fastify.get(
     '/',
-    { preHandler: [optionalAuthenticate] },
+    {
+      config: {
+        rateLimit: false,
+      },
+      preHandler: [optionalAuthenticate],
+    },
     controller.getProducts.bind(controller) as unknown as RouteHandlerMethod
   );
 
   fastify.get(
     '/image',
+    {
+      config: {
+        rateLimit: false,
+      },
+    },
     controller.proxyImage.bind(controller) as unknown as RouteHandlerMethod
   );
 
   fastify.get(
     '/stored-image',
+    {
+      config: {
+        rateLimit: false,
+      },
+    },
     controller.getStoredImage.bind(controller) as unknown as RouteHandlerMethod
   );
 
@@ -38,7 +53,12 @@ export async function productsRouter(fastify: FastifyInstance): Promise<void> {
 
   fastify.get(
     '/:id',
-    { preHandler: [optionalAuthenticate] },
+    {
+      config: {
+        rateLimit: false,
+      },
+      preHandler: [optionalAuthenticate],
+    },
     controller.getProduct.bind(controller) as unknown as RouteHandlerMethod
   );
 
