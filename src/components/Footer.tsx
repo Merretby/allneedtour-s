@@ -80,7 +80,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-background border-t border-border mt-20">
+    <footer className="site-footer bg-background border-t border-border mt-20">
       {/* Top Banner Section */}
       <div className="bg-muted/30 border-b border-border">
         <div className="container mx-auto px-4 py-8">

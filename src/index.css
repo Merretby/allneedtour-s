@@ -46,6 +46,11 @@ All colors MUST be HSL.
     --ring: 15 35% 70%;
 
     --radius: 0.75rem;
+
+    --site-sidebar-width: 16rem;
+    --site-topbar-height: 2rem;
+    --site-header-height: 6rem;
+    --site-chrome-height: 8rem;
     
     /* Custom shadows */
     --shadow-soft: 0 2px 12px -2px hsl(25 15% 25% / 0.08);
@@ -122,7 +127,7 @@ All colors MUST be HSL.
   html,
   body,
   #root {
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   body {
@@ -131,6 +136,71 @@ All colors MUST be HSL.
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
+  }
+}
+
+@layer components {
+  .site-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    height: var(--site-topbar-height);
+  }
+
+  .site-header {
+    position: sticky;
+    top: var(--site-topbar-height);
+    z-index: 50;
+    height: var(--site-header-height);
+  }
+
+  .site-header__logo {
+    display: flex;
+    width: var(--site-sidebar-width);
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .site-sidebar {
+    position: relative;
+  }
+
+  .site-footer {
+    position: relative;
+    z-index: 45;
+    width: 100vw;
+  }
+
+  main > .site-footer,
+  div > .site-footer {
+    width: 100vw;
+  }
+
+  @media (min-width: 768px) {
+    .site-sidebar {
+      position: fixed;
+      top: var(--site-chrome-height);
+      bottom: 0;
+      left: 0;
+      z-index: 40;
+      width: var(--site-sidebar-width);
+      overflow-y: auto;
+    }
+
+    main > .site-footer {
+      margin-left: calc(-1 * var(--site-sidebar-width));
+    }
+  }
+
+  @media (max-width: 767px) {
+    .site-header {
+      height: auto;
+      min-height: var(--site-header-height);
+    }
+
+    .site-header__logo {
+      width: auto;
+    }
   }
 }
 

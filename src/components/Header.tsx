@@ -49,11 +49,11 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 h-24 bg-card border-b border-border shadow-sm">
-      <div className="container mx-auto flex h-full items-center px-4">
+    <header className="site-header bg-card border-b border-border shadow-sm">
+      <div className="site-header__inner flex h-full w-full items-center px-4">
         <div className="flex w-full items-center gap-6">
           {/* Logo */}
-          <a href="/" className="flex-shrink-0">
+          <a href="/" className="site-header__logo flex-shrink-0">
             <img
               src="/logo.jpg"
               alt="AllNeed"

@@ -184,7 +184,7 @@ const Navigation = () => {
   return (
     <nav
       data-site-sidebar
-      className="border-b border-border bg-card md:fixed md:inset-y-0 md:left-0 md:top-32 md:z-40 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r"
+      className="site-sidebar border-b border-border bg-card md:border-b-0 md:border-r"
     >
       <div>
         <div className="flex gap-2 overflow-x-auto p-3 md:block md:space-y-1 md:overflow-visible md:p-4">
