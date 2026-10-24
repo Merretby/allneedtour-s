@@ -146,6 +146,46 @@ const Navigation = () => {
       ],
     },
     {
+      name: "Hygiène & Bébé",
+      slug: "hygiene-bebe",
+      subcategories: [
+        { name: "Hygiène visage", items: ["Démaquillants et nettoyants"] },
+        { name: "Hygiène bucco-dentaire", items: ["Dentifrices", "Brosses à dents"] },
+        { name: "Hygiène intime", items: [] },
+        { name: "Bébé", items: ["Changes bébé", "Biberons", "Sucettes"] },
+      ],
+    },
+    {
+      name: "Santé & Nutrition",
+      slug: "sante-nutrition",
+      subcategories: [
+        { name: "Compléments alimentaires", items: ["Vitamines et formes"] },
+        { name: "Énergie et immunité", items: ["Énergie et hydratation", "Défenses immunitaires"] },
+        { name: "Digestion et sommeil", items: ["Transit digestion et élimination", "Sommeil et détente"] },
+        { name: "Huiles essentielles", items: [] },
+      ],
+    },
+    {
+      name: "Sport & Fitness",
+      slug: "sport-fitness",
+      subcategories: [
+        { name: "Protéines", items: ["Compléments sportifs"] },
+        { name: "Nutrition sportive", items: ["Barres & encas sportifs"] },
+        { name: "Énergie & hydratation", items: [] },
+        { name: "Récupération", items: [] },
+      ],
+    },
+    {
+      name: "Bio & Maison",
+      slug: "bio-maison",
+      subcategories: [
+        { name: "Cosmétiques bio", items: ["Produits bio visage et corps"] },
+        { name: "Hygiène bio", items: ["Produits hygiène bio"] },
+        { name: "Alimentation bio", items: ["Alimentation bio et naturel"] },
+        { name: "Maison", items: ["Hygiène maison", "Entretien de la maison"] },
+      ],
+    },
+    {
       name: "Nouveautés & Tendances",
       slug: "nouveautes",
       subcategories: [
@@ -177,11 +217,11 @@ const Navigation = () => {
       }}
     >
       <div className="container mx-auto px-4 overflow-visible">
-        <div className="flex items-center space-x-6 py-4 overflow-x-auto md:overflow-visible">
+        <div className="flex items-center gap-2 py-3 overflow-x-auto md:flex-wrap md:justify-center md:overflow-visible">
           {blackFriday?.active && (
             <button
               onClick={() => navigate("/black-friday")}
-              className="inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-destructive px-4 py-1.5 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 smooth-transition"
+              className="inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-destructive px-3 py-1.5 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 smooth-transition"
             >
               <Tag className="h-3.5 w-3.5" />
               Black Friday
@@ -189,7 +229,7 @@ const Navigation = () => {
           )}
           <button
             onClick={() => navigate("/products")}
-            className="inline-flex flex-shrink-0 items-center whitespace-nowrap text-sm font-medium text-foreground hover:text-primary smooth-transition"
+            className="inline-flex flex-shrink-0 items-center whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary hover:text-primary smooth-transition"
           >
             Tous les produits
           </button>
@@ -208,7 +248,7 @@ const Navigation = () => {
             >
               <button
                 onClick={() => navigate(`/category/${category.slug}`)}
-                className="text-sm font-medium text-foreground hover:text-primary smooth-transition flex items-center gap-1 whitespace-nowrap"
+                className="flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary hover:text-primary smooth-transition"
               >
                 {category.name}
                 <ChevronDown className="h-3 w-3" />
@@ -229,7 +269,13 @@ const Navigation = () => {
                         <div key={idx} className="group">
                           <h3
                             className="font-semibold text-sm text-foreground mb-2 hover:text-primary cursor-pointer"
-                            onClick={() => navigate(`/category/${category.slug}`)}
+                            onClick={() =>
+                              navigate(
+                                `/category/${category.slug}?category=${encodeURIComponent(
+                                  sub.name.toUpperCase()
+                                )}`
+                              )
+                            }
                           >
                             {sub.name}
                           </h3>
@@ -238,7 +284,13 @@ const Navigation = () => {
                               {sub.items.map((item, itemIdx) => (
                                 <li key={itemIdx}>
                                   <button
-                                    onClick={() => navigate(`/category/${category.slug}`)}
+                                    onClick={() =>
+                                      navigate(
+                                        `/category/${category.slug}?category=${encodeURIComponent(
+                                          item.toUpperCase()
+                                        )}`
+                                      )
+                                    }
                                     className="text-xs text-muted-foreground hover:text-primary smooth-transition block text-left"
                                   >
                                     • {item}

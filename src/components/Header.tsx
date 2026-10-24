@@ -55,7 +55,7 @@ const Header = () => {
           {/* Logo */}
           <a href="/" className="flex-shrink-0">
             <img 
-              src="/logo_para.svg" 
+              src="/logo.jpg" 
               alt="Para La Grand" 
               className="h-20 md:h-24 w-auto"
             />

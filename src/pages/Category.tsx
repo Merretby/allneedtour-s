@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
@@ -19,6 +20,10 @@ const categoryNames: Record<string, string> = {
   parfums: "Parfums",
   "sante-bien-etre": "Santé & Bien-être",
   "corps-bain": "Corps & Bain",
+  "hygiene-bebe": "Hygiène & Bébé",
+  "sante-nutrition": "Santé & Nutrition",
+  "sport-fitness": "Sport & Fitness",
+  "bio-maison": "Bio & Maison",
   nouveautes: "Nouveautés & Tendances",
   marques: "Marques",
 };
@@ -46,7 +51,7 @@ const categoryFilter: Record<string, string[]> = {
     "CAPILLAIRE - DERCOS",
     "COLORATION CHEVEUX",
     "SHAMPOING CHEVEUX COLORES",
-    "SOIN CAPILLAIRE PREMIUM",
+    "Soin Capillaire Premium",
     "ANTI-POUX",
     "APRES SHAMPOING",
     "SHAMPOING CHEVEUX SECS",
@@ -89,12 +94,121 @@ const categoryFilter: Record<string, string[]> = {
     "COU DOS ET POSTURE",
   ],
   "corps-bain": ["SOINS MAINS ET PIEDS", "PRODUITS AMERICAINS VISAGE ET CORPS"],
+  "hygiene-bebe": [
+    "DEMAQUILLANTS ET NETTOYANTS",
+    "GELS ET HUILES LAVANTS",
+    "BROSSES A DENTS ADULTES",
+    "BROSSETTES INTERDENTAIRES ET FILS DENTAIRES",
+    "DENTIFRICES",
+    "BAINS DE BOUCHE ET HALEINE FRAICHE",
+    "HYGIENE INTIME",
+    "CHANGES BEBE",
+    "BIBERON ET GOUPILLON",
+    "SUCETTES ET ATTACHES SUCETTES",
+    "TETINE",
+    "HYGIENE BEBE",
+    "LINGETTES",
+  ],
+  "sante-nutrition": [
+    "COMPLEMENTS ALIMENTAIRES",
+    "COMPLEMENTS CHEVEUX ET ONGLES",
+    "VITAMINES ET FORMES",
+    "PRODUITS ALIMENTAIRES BIO",
+    "ENERGIE ET HYDRATATION",
+    "DEFENSES IMMUNITAIRES",
+    "TRANSIT DIGESTION ET ELIMINATION",
+    "SOMMEIL ET DETENTE",
+    "HUILES ESSENTIELLES",
+    "ARTICULATIONS ET CRAMPES",
+    "CIRCULATION SANGUINE ET COEUR",
+  ],
+  "sport-fitness": [
+    "NUTRITION SPORT",
+    "PROTÉINES",
+    "COMPLÉMENTS SPORTIFS",
+    "BARRES &amp; ENCAS SPORTIFS",
+    "ÉNERGIE ET HYDRATATION",
+    "RÉCUPÉRATION",
+  ],
+  "bio-maison": [
+    "PRODUITS BIO VISAGE ET CORPS",
+    "COSMETIQUE BIO",
+    "PRODUITS HYGIENE BIO",
+    "ALIMENTATION BIO ET NATUREL",
+    "HYGIENE MAISON",
+    "NETTOYANTS VAISSELLES ET LESSIVES BEBE",
+    "ENTRETIEN DE LA MAISON",
+  ],
+};
+
+const categoryAliases: Record<string, string> = {
+  "PROTÉINES": "PROTÉINES",
+  "COMPLÉMENTS SPORTIFS": "COMPLÉMENTS SPORTIFS",
+  "NUTRITION SPORTIVE": "NUTRITION SPORT",
+  "BARRES & ENCAS SPORTIFS": "BARRES &amp; ENCAS SPORTIFS",
+  "ÉNERGIE & HYDRATATION": "ÉNERGIE ET HYDRATATION",
+  "RÉCUPÉRATION": "RÉCUPÉRATION",
+  "SÉRUMS": "SERUMS ET HUILES",
+  "CRÈMES JOUR/NUIT": "CREMES JOUR",
+  "CONTOUR DES YEUX": "SOINS CONTOURS YEUX",
+  "MASQUES": "MASQUES ET CREMES",
+  "NETTOYANTS": "DEMAQUILLANTS ET NETTOYANTS",
+  "SOINS CIBLÉS": "SOINS ANTI IMPERFECTIONS",
+  "SOLAIRE VISAGE": "CREMES SOLAIRES",
+  "SHAMPOOING": "SHAMPOINGS USAGE FREQUENT",
+  "APRÈS-SHAMPOOING": "APRES SHAMPOING",
+  "MASQUES CHEVEUX": "SOINS CHEVEUX VISAGE ET CORPS",
+  "HUILE CHEVEUX": "SOINS CHEVEUX VISAGE ET CORPS",
+  "COLORATION": "COLORATION CHEVEUX",
+  "SHAMPOOING SEC": "SHAMPOING SEC",
+  "ACCESSOIRES": "ACCESSOIRES POUR CHEVEUX",
+  "ANTI-CHUTE": "SHAMPOINGS ANTI-CHUTE",
+  "TEINT": "FONDS DE TEINT",
+  "FOND DE TEINT": "FONDS DE TEINT",
+  "YEUX": "YEUX",
+  "LÈVRES": "LEVRES",
+  "ONGLES": "ONGLES",
+  "PARFUMS FEMME": "PARFUMS",
+  "PARFUMS HOMME": "PARFUMS",
+  "COFFRETS": "COFFRETS",
+  "HYGIÈNE VISAGE": "DEMAQUILLANTS ET NETTOYANTS",
+  "DEMAQUILLANTS ET NETTOYANTS": "DEMAQUILLANTS ET NETTOYANTS",
+  "HYGIÈNE BUCCO-DENTAIRE": "DENTIFRICES",
+  "BROSSES À DENTS": "BROSSES A DENTS ADULTES",
+  "DENTIFRICES": "DENTIFRICES",
+  "HYGIÈNE INTIME": "HYGIENE INTIME",
+  "BÉBÉ": "BEBES ET MAMANS",
+  "CHANGES BÉBÉ": "CHANGES BEBE",
+  "BIBERONS": "BIBERON ET GOUPILLON",
+  "SUCETTES": "SUCETTES ET ATTACHES SUCETTES",
+  "COMPLÉMENTS ALIMENTAIRES": "COMPLEMENTS ALIMENTAIRES",
+  "VITAMINES ET FORMES": "VITAMINES ET FORMES",
+  "ÉNERGIE ET IMMUNITÉ": "DEFENSES IMMUNITAIRES",
+  "ÉNERGIE ET HYDRATATION": "ÉNERGIE ET HYDRATATION",
+  "DÉFENSES IMMUNITAIRES": "DEFENSES IMMUNITAIRES",
+  "DIGESTION ET SOMMEIL": "SOMMEIL ET DETENTE",
+  "TRANSIT DIGESTION ET ÉLIMINATION": "TRANSIT DIGESTION ET ELIMINATION",
+  "HUILES ESSENTIELLES": "HUILES ESSENTIELLES",
+  "COSMÉTIQUES BIO": "COSMETIQUE BIO",
+  "PRODUITS BIO VISAGE ET CORPS": "PRODUITS BIO VISAGE ET CORPS",
+  "HYGIÈNE BIO": "PRODUITS HYGIENE BIO",
+  "PRODUITS HYGIÈNE BIO": "PRODUITS HYGIENE BIO",
+  "ALIMENTATION BIO": "ALIMENTATION BIO ET NATUREL",
+  "HYGIÈNE MAISON": "HYGIENE MAISON",
+  "ENTRETIEN DE LA MAISON": "ENTRETIEN DE LA MAISON",
 };
 
 const Category = () => {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
   const categoryName = categoryNames[slug || ""] || "Produits";
-  const backendCategory = slug ? categoryFilter[slug]?.join(",") : undefined;
+  const requestedCategory = searchParams.get("category");
+  const exactCategory = requestedCategory
+    ? categoryAliases[requestedCategory.toUpperCase()] ?? requestedCategory.toUpperCase()
+    : undefined;
+  const backendCategory =
+    exactCategory ||
+    (slug ? categoryFilter[slug]?.join(",") : undefined);
   const [page, setPage] = useState(1);
 
   const productsQuery = useProducts({

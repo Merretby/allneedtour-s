@@ -117,12 +117,12 @@ async function showLocalNotification(
 
     if (registration) {
       await registration.showNotification(title, {
-        icon: "/logo_para.svg",
+        icon: "/logo.jpg",
         badge: "/favicon.ico",
         ...options,
       });
     } else {
-      new Notification(title, { icon: "/logo_para.svg", ...options });
+      new Notification(title, { icon: "/logo.jpg", ...options });
     }
   } catch {
     // Local notifications are best-effort.
