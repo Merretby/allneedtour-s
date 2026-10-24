@@ -92,7 +92,8 @@ const Index = () => {
       <TopBar />
       <Header />
       <Navigation />
-      <HeroCarousel />
+      <div className="min-w-0 md:ml-64 md:w-[calc(100%-16rem)]">
+        <HeroCarousel />
 
       {/* Black Friday Section */}
       {blackFriday?.active && (blackFriday.products?.length ?? 0) > 0 && (
@@ -563,6 +564,7 @@ const Index = () => {
         </div>
       </section>
 
+      </div>
       <Footer />
     </div>
   );

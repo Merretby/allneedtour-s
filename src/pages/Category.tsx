@@ -237,7 +237,7 @@ const Category = () => {
       <Header />
       <Navigation />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto min-w-0 px-4 py-8 md:ml-64 md:w-[calc(100%-16rem)]">
         <h1 className="text-3xl font-heading font-bold mb-8">{categoryName}</h1>
 
         {isLoading && <p className="text-center text-muted-foreground py-16">Chargement…</p>}

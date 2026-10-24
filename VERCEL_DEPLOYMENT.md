@@ -129,7 +129,7 @@ Everything runs client-side with localStorage.
 
 **Images not loading?**
 - All images in `/public` folder ✓
-- Logo at `/public/logo.jpg` ✓
+- Logo at `/public/logo.png` ✓
 
 ---
 

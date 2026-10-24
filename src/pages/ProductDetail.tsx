@@ -113,7 +113,7 @@ const ProductDetail = () => {
       <Header />
       <Navigation />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto min-w-0 px-4 py-8 md:ml-64 md:w-[calc(100%-16rem)]">
         <div className="grid md:grid-cols-2 gap-8">
           {/* Image */}
           <div className="bg-secondary rounded-xl overflow-hidden">

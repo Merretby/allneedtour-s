@@ -136,7 +136,7 @@ Edit `src/index.css` to customize the color scheme:
 
 ### Logo
 
-Replace `/public/logo.jpg` with your own logo.
+Replace `/public/logo.png` with your own logo.
 
 ## 📝 Notes
 

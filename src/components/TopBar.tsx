@@ -1,6 +1,6 @@
 const TopBar = () => {
   return (
-    <div className="bg-accent text-accent-foreground py-2 text-center text-sm font-medium">
+    <div className="h-8 bg-accent px-4 text-center text-xs font-medium leading-8 text-accent-foreground">
       <p>Livraison offerte dès 60 Dhs</p>
     </div>
   );

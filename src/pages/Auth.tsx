@@ -81,9 +81,11 @@ const Auth = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
             <User className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
-            Para La Grand
-          </h1>
+          <img
+            src="/logo.jpg"
+            alt="allneed"
+            className="mx-auto mb-2 h-28 w-28 rounded object-contain"
+          />
           <p className="text-muted-foreground">
             Connectez-vous à votre compte
           </p>

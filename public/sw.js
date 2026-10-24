@@ -12,7 +12,7 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Para La Grand";
   const options = {
     body: payload.body || "",
-    icon: "/logo.jpg",
+    icon: "/logo.png",
     badge: "/favicon.ico",
     tag: payload.tag,
     data: { url: payload.url || "/" },

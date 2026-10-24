@@ -73,7 +73,7 @@ const Search = () => {
       </div>
 
       {/* Results */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto min-w-0 px-4 py-12 md:ml-64 md:w-[calc(100%-16rem)]">
         {debouncedQuery && !isLoading && (
           <div className="mb-6">
             <p className="text-lg text-muted-foreground">

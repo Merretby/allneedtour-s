@@ -40,7 +40,7 @@ const Favorites = () => {
         <TopBar />
         <Header />
         <Navigation />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto min-w-0 px-4 py-8 md:ml-64 md:w-[calc(100%-16rem)]">
           <p className="text-center">Chargement...</p>
         </main>
         <Footer />
@@ -54,7 +54,7 @@ const Favorites = () => {
       <Header />
       <Navigation />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto min-w-0 px-4 py-8 md:ml-64 md:w-[calc(100%-16rem)]">
         <div className="flex items-center gap-3 mb-8">
           <Heart className="h-8 w-8 text-primary fill-primary" />
           <h1 className="text-3xl font-heading font-bold">Mes Favoris</h1>

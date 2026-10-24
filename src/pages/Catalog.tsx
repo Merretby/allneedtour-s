@@ -25,7 +25,7 @@ const Catalog = () => {
       <Header />
       <Navigation />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto min-w-0 px-4 py-8 md:ml-64 md:w-[calc(100%-16rem)]">
         <div className="mb-8">
           <h1 className="text-3xl font-heading font-bold">Tous les produits</h1>
           {pagination && (

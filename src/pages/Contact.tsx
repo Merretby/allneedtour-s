@@ -29,7 +29,7 @@ const Contact = () => {
       <Header />
       <Navigation />
 
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto min-w-0 px-4 py-12 md:ml-64 md:w-[calc(100%-16rem)]">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-heading font-bold text-center mb-4">Nous Contacter</h1>
           <p className="text-center text-muted-foreground mb-12">

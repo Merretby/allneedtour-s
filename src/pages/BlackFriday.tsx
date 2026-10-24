@@ -22,7 +22,7 @@ const BlackFriday = () => {
       <Header />
       <Navigation />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto min-w-0 px-4 py-8 md:ml-64 md:w-[calc(100%-16rem)]">
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-destructive px-4 py-1 text-sm font-semibold text-destructive-foreground">
             <Tag className="h-4 w-4" />

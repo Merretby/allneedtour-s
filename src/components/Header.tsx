@@ -49,26 +49,26 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
-      <div className="container mx-auto px-4 py-2">
-        <div className="flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 h-24 bg-card border-b border-border shadow-sm">
+      <div className="container mx-auto flex h-full items-center px-4">
+        <div className="flex w-full items-center gap-6">
           {/* Logo */}
           <a href="/" className="flex-shrink-0">
-            <img 
-              src="/logo.jpg" 
-              alt="Para La Grand" 
-              className="h-20 md:h-24 w-auto"
+            <img
+              src="/logo.jpg"
+              alt="AllNeed"
+              className="h-16 w-16 rounded object-contain md:h-20 md:w-20"
             />
           </a>
 
           {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-2xl">
+          <div className="hidden min-w-0 flex-1 md:flex">
             <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Rechercher un produit, une marque…"
-                className="pl-10 bg-secondary border-border rounded-full"
+                className="h-11 rounded-full border-border bg-secondary pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -76,10 +76,10 @@ const Header = () => {
           </div>
 
           {/* Icons */}
-          <div className="flex items-center gap-3 md:gap-4">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 md:gap-2">
             <button 
               onClick={() => navigate("/category/bons-plans")}
-              className="hover:text-primary smooth-transition p-2 relative"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-secondary hover:text-primary smooth-transition"
             >
               <Tag className="h-5 w-5" />
               <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-destructive text-destructive-foreground">
@@ -91,7 +91,7 @@ const Header = () => {
               <DropdownMenu open={profileOpen} onOpenChange={setProfileOpen}>
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="hover:text-primary smooth-transition p-2"
+                    className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-secondary hover:text-primary smooth-transition"
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                   >
@@ -182,7 +182,7 @@ const Header = () => {
             ) : (
               <DropdownMenu open={profileOpen} onOpenChange={setProfileOpen}>
                 <DropdownMenuTrigger asChild>
-                  <button 
+                  <button
                     className="hover:text-primary smooth-transition p-2"
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}

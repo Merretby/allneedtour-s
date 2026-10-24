@@ -64,7 +64,7 @@ const Cart = () => {
         <TopBar />
         <Header />
         <Navigation />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto min-w-0 px-4 py-8 md:ml-64 md:w-[calc(100%-16rem)]">
           <p className="text-center">Chargement...</p>
         </main>
         <Footer />
@@ -78,7 +78,7 @@ const Cart = () => {
       <Header />
       <Navigation />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto min-w-0 px-4 py-8 md:ml-64 md:w-[calc(100%-16rem)]">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-heading font-bold">Mon Panier</h1>
           <Button

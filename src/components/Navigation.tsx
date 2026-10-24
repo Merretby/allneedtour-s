@@ -1,38 +1,10 @@
-import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ChevronDown, Tag } from "lucide-react";
+import { Tag } from "lucide-react";
 import { useBlackFriday } from "@/lib/api/hooks";
-
-const CLOSE_DELAY_MS = 120;
 
 const Navigation = () => {
   const navigate = useNavigate();
   const { data: blackFriday } = useBlackFriday();
-  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
-  const closeTimer = useRef<number | null>(null);
-
-  const openCategory = (slug: string) => {
-    if (closeTimer.current) {
-      window.clearTimeout(closeTimer.current);
-      closeTimer.current = null;
-    }
-    setHoveredCategory(slug);
-  };
-
-  const scheduleClose = () => {
-    if (closeTimer.current) window.clearTimeout(closeTimer.current);
-    closeTimer.current = window.setTimeout(
-      () => setHoveredCategory(null),
-      CLOSE_DELAY_MS
-    );
-  };
-
-  useEffect(() => {
-    return () => {
-      if (closeTimer.current) window.clearTimeout(closeTimer.current);
-    };
-  }, []);
 
   const categories = [
     {
@@ -211,100 +183,67 @@ const Navigation = () => {
 
   return (
     <nav
-      className="border-b border-border bg-card sticky top-[76px] z-40 overflow-visible"
-      onKeyDown={(event) => {
-        if (event.key === "Escape") setHoveredCategory(null);
-      }}
+      data-site-sidebar
+      className="border-b border-border bg-card md:fixed md:inset-y-0 md:left-0 md:top-32 md:z-40 md:w-64 md:overflow-y-auto md:border-b-0 md:border-r"
     >
-      <div className="container mx-auto px-4 overflow-visible">
-        <div className="flex items-center gap-2 py-3 overflow-x-auto md:flex-wrap md:justify-center md:overflow-visible">
+      <div>
+        <div className="flex gap-2 overflow-x-auto p-3 md:block md:space-y-1 md:overflow-visible md:p-4">
           {blackFriday?.active && (
             <button
               onClick={() => navigate("/black-friday")}
-              className="inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-destructive px-3 py-1.5 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 smooth-transition"
+              className="inline-flex w-auto flex-shrink-0 items-center gap-2 rounded-lg bg-destructive px-3 py-2 text-left text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 md:w-full"
             >
-              <Tag className="h-3.5 w-3.5" />
+              <Tag className="h-4 w-4" />
               Black Friday
             </button>
           )}
           <button
             onClick={() => navigate("/products")}
-            className="inline-flex flex-shrink-0 items-center whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary hover:text-primary smooth-transition"
+            className="inline-flex w-auto flex-shrink-0 items-center rounded-lg px-3 py-2 text-left text-sm font-semibold text-foreground hover:bg-secondary hover:text-primary md:w-full"
           >
             Tous les produits
           </button>
-          {categories.map((category, index) => (
-            <div
-              key={category.slug}
-              className="relative flex-shrink-0"
-              onMouseEnter={() => openCategory(category.slug)}
-              onMouseLeave={scheduleClose}
-              onFocus={() => openCategory(category.slug)}
-              onBlur={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget as Node)) {
-                  scheduleClose();
-                }
-              }}
-            >
+          {categories.map((category) => (
+            <div key={category.slug} className="min-w-[190px] md:min-w-0">
               <button
                 onClick={() => navigate(`/category/${category.slug}`)}
-                className="flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary hover:text-primary smooth-transition"
+                className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-foreground hover:bg-secondary hover:text-primary"
               >
                 {category.name}
-                <ChevronDown className="h-3 w-3" />
               </button>
-
-              {/* Dropdown Menu */}
-              {hoveredCategory === category.slug && (
-                <div
-                  className={`absolute top-full z-50 pt-2 ${
-                    index >= categories.length - 2 ? "right-0" : "left-0"
-                  }`}
-                  onMouseEnter={() => openCategory(category.slug)}
-                  onMouseLeave={scheduleClose}
-                >
-                  <div className="bg-white dark:bg-gray-900 border border-border rounded-lg shadow-2xl min-w-[320px] max-w-[700px] p-6">
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-4 max-h-[500px] overflow-y-auto">
-                      {category.subcategories.map((sub, idx) => (
-                        <div key={idx} className="group">
-                          <h3
-                            className="font-semibold text-sm text-foreground mb-2 hover:text-primary cursor-pointer"
-                            onClick={() =>
-                              navigate(
-                                `/category/${category.slug}?category=${encodeURIComponent(
-                                  sub.name.toUpperCase()
-                                )}`
-                              )
-                            }
-                          >
-                            {sub.name}
-                          </h3>
-                          {sub.items && sub.items.length > 0 && (
-                            <ul className="ml-3 space-y-1.5">
-                              {sub.items.map((item, itemIdx) => (
-                                <li key={itemIdx}>
-                                  <button
-                                    onClick={() =>
-                                      navigate(
-                                        `/category/${category.slug}?category=${encodeURIComponent(
-                                          item.toUpperCase()
-                                        )}`
-                                      )
-                                    }
-                                    className="text-xs text-muted-foreground hover:text-primary smooth-transition block text-left"
-                                  >
-                                    • {item}
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+              <div className="ml-3 hidden space-y-1 border-l border-border pl-3 md:block">
+                {category.subcategories.map((sub) => (
+                  <div key={sub.name}>
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/category/${category.slug}?category=${encodeURIComponent(
+                            sub.name.toUpperCase()
+                          )}`
+                        )
+                      }
+                      className="block w-full rounded px-2 py-1 text-left text-xs text-muted-foreground hover:bg-secondary hover:text-primary"
+                    >
+                      {sub.name}
+                    </button>
+                    {sub.items.map((item) => (
+                      <button
+                        key={item}
+                        onClick={() =>
+                          navigate(
+                            `/category/${category.slug}?category=${encodeURIComponent(
+                              item.toUpperCase()
+                            )}`
+                          )
+                        }
+                        className="ml-2 block w-[calc(100%-0.5rem)] rounded px-2 py-1 text-left text-[11px] text-muted-foreground hover:text-primary"
+                      >
+                        {item}
+                      </button>
+                    ))}
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           ))}
         </div>

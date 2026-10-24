@@ -92,7 +92,7 @@ const Orders = () => {
       <Header />
       <Navigation />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto min-w-0 px-4 py-8 md:ml-64 md:w-[calc(100%-16rem)]">
         <h1 className="text-3xl font-heading font-bold mb-8 text-foreground">Mes Commandes</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
