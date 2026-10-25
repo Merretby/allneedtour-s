@@ -9,8 +9,7 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/lib/api/hooks";
 import { ApiError } from "@/lib/api/client";
-import { toNumber } from "@/lib/format";
-
+import { categoryFilter } from "@/lib/category-filters";
 const categoryNames: Record<string, string> = {
   "bons-plans": "Bons Plans & Cadeaux",
   "k-beauty": "K-Beauty",
@@ -26,119 +25,6 @@ const categoryNames: Record<string, string> = {
   "bio-maison": "Bio & Maison",
   nouveautes: "Nouveautés & Tendances",
   marques: "Marques",
-};
-
-// Navbar groups mapped to the category values stored in the imported catalog.
-const categoryFilter: Record<string, string[]> = {
-  "k-beauty": ["PRODUITS COREENS"],
-  skincare: [
-    "SOINS HYDRATANTS",
-    "MASQUES ET CREMES",
-    "SOINS ECLAIRCISSANTS ET ANTI PIGMENTS",
-    "SOINS ANTI AGE",
-    "CREMES JOUR",
-    "SOINS ANTI ACNE",
-    "SOINS ANTI IMPERFECTIONS",
-    "SERUMS ET HUILES",
-    "ACCESSOIRES DE SOINS VISAGE",
-    "SOINS CONTOURS YEUX",
-    "MASQUES VISAGE",
-    "CREMES SOLAIRES",
-    "GELS SOLAIRE",
-  ],
-  capillaire: [
-    "ACCESSOIRES POUR CHEVEUX",
-    "CAPILLAIRE - DERCOS",
-    "COLORATION CHEVEUX",
-    "SHAMPOING CHEVEUX COLORES",
-    "Soin Capillaire Premium",
-    "ANTI-POUX",
-    "APRES SHAMPOING",
-    "SHAMPOING CHEVEUX SECS",
-    "SPRAYS VOLUME CHEVEUX",
-    "SHAMPOING SEC",
-    "SHAMPOINGS ANTI-CHUTE",
-    "SOINS CHEVEUX VISAGE ET CORPS",
-    "GELS COIFFANTS",
-    "LAQUES CHEVEUX",
-    "SHAMPOINGS USAGE FREQUENT",
-    "PRODUITS COIFFANTS",
-    "SHAMPOING CHEVEUX GRAS",
-    "ANTI CHUTE",
-    "RACINE",
-    "PRODUITS AMERICAINS CHEVEUX",
-  ],
-  maquillage: [
-    "MAKE UP YOUR MIND",
-    "YEUX ET SOURCILS",
-    "LIPSTICK DAY",
-    "LEVRES",
-    "ACCESSOIRES DE MAQUILLAGES",
-    "FONDS DE TEINT",
-    "MAQUILLAGE - MAKEUP",
-    "YEUX",
-    "ONGLES",
-    "BLUSH",
-    "POUDRES",
-    "GLOW",
-    "LIPS MAYBELLINE",
-  ],
-  parfums: ["PARFUMS"],
-  "sante-bien-etre": [
-    "COMPLEMENTS CHEVEUX ET ONGLES",
-    "COMPLEMENTS ALIMENTAIRES",
-    "DENTIFRICES",
-    "POMMADES ET CREMES CICATRISANTES",
-    "FASHION BEBE ET ENFANT",
-    "CHANGES BEBE",
-    "COU DOS ET POSTURE",
-  ],
-  "corps-bain": ["SOINS MAINS ET PIEDS", "PRODUITS AMERICAINS VISAGE ET CORPS"],
-  "hygiene-bebe": [
-    "DEMAQUILLANTS ET NETTOYANTS",
-    "GELS ET HUILES LAVANTS",
-    "BROSSES A DENTS ADULTES",
-    "BROSSETTES INTERDENTAIRES ET FILS DENTAIRES",
-    "DENTIFRICES",
-    "BAINS DE BOUCHE ET HALEINE FRAICHE",
-    "HYGIENE INTIME",
-    "CHANGES BEBE",
-    "BIBERON ET GOUPILLON",
-    "SUCETTES ET ATTACHES SUCETTES",
-    "TETINE",
-    "HYGIENE BEBE",
-    "LINGETTES",
-  ],
-  "sante-nutrition": [
-    "COMPLEMENTS ALIMENTAIRES",
-    "COMPLEMENTS CHEVEUX ET ONGLES",
-    "VITAMINES ET FORMES",
-    "PRODUITS ALIMENTAIRES BIO",
-    "ENERGIE ET HYDRATATION",
-    "DEFENSES IMMUNITAIRES",
-    "TRANSIT DIGESTION ET ELIMINATION",
-    "SOMMEIL ET DETENTE",
-    "HUILES ESSENTIELLES",
-    "ARTICULATIONS ET CRAMPES",
-    "CIRCULATION SANGUINE ET COEUR",
-  ],
-  "sport-fitness": [
-    "NUTRITION SPORT",
-    "PROTÉINES",
-    "COMPLÉMENTS SPORTIFS",
-    "BARRES &amp; ENCAS SPORTIFS",
-    "ÉNERGIE ET HYDRATATION",
-    "RÉCUPÉRATION",
-  ],
-  "bio-maison": [
-    "PRODUITS BIO VISAGE ET CORPS",
-    "COSMETIQUE BIO",
-    "PRODUITS HYGIENE BIO",
-    "ALIMENTATION BIO ET NATUREL",
-    "HYGIENE MAISON",
-    "NETTOYANTS VAISSELLES ET LESSIVES BEBE",
-    "ENTRETIEN DE LA MAISON",
-  ],
 };
 
 const categoryAliases: Record<string, string> = {
@@ -204,7 +90,10 @@ const Category = () => {
   const categoryName = categoryNames[slug || ""] || "Produits";
   const requestedCategory = searchParams.get("category");
   const exactCategory = requestedCategory
-    ? categoryAliases[requestedCategory.toUpperCase()] ?? requestedCategory.toUpperCase()
+    ? requestedCategory.includes("/")
+      ? requestedCategory
+      : categoryAliases[requestedCategory.toUpperCase()] ??
+        (categoryFilter[slug || ""] ? undefined : requestedCategory)
     : undefined;
   const backendCategory =
     exactCategory ||
@@ -226,10 +115,7 @@ const Category = () => {
     setPage(1);
   }, [slug]);
 
-  let products = data?.data ?? [];
-  if (slug === "bons-plans") {
-    products = products.filter((p) => toNumber(p.compare_at_price) > toNumber(p.price));
-  }
+  const products = data?.data ?? [];
 
   return (
     <div className="min-h-screen bg-background">

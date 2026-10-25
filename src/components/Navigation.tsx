@@ -1,6 +1,10 @@
 import { useNavigate } from "react-router-dom";
+import { useQueries } from "@tanstack/react-query";
 import { Tag } from "lucide-react";
 import { useBlackFriday } from "@/lib/api/hooks";
+import { productsApi } from "@/lib/api/endpoints";
+import { categoryFilter } from "@/lib/category-filters";
+import { useManagedCategories } from "@/lib/category-management";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -180,6 +184,30 @@ const Navigation = () => {
       ],
     },
   ];
+  const { categories: managedCategories } = useManagedCategories(categories);
+  const categoryAvailability = useQueries({
+    queries: managedCategories.map((category) => {
+      const filters = categoryFilter[category.slug];
+      return {
+        queryKey: ["navigation-category", category.slug, filters],
+        queryFn: () => productsApi.list({ category: filters?.join(","), limit: 1 }),
+        enabled: Boolean(filters),
+        staleTime: 60_000,
+      };
+    }),
+  });
+  const visibleCategories = managedCategories.filter((category, index) => {
+    const filters = categoryFilter[category.slug];
+    const query = categoryAvailability[index];
+
+    return (
+      !filters ||
+      (filters.length > 0 &&
+        (query.isPending ||
+          query.isError ||
+          (query.data?.pagination.total ?? 0) > 0))
+    );
+  });
 
   return (
     <nav
@@ -203,10 +231,16 @@ const Navigation = () => {
           >
             Tous les produits
           </button>
-          {categories.map((category) => (
+          {visibleCategories.map((category) => (
             <div key={category.slug} className="min-w-[190px] md:min-w-0">
               <button
-                onClick={() => navigate(`/category/${category.slug}`)}
+                onClick={() =>
+                  navigate(
+                    `/category/${category.slug}?category=${encodeURIComponent(
+                      category.name
+                    )}`
+                  )
+                }
                 className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-foreground hover:bg-secondary hover:text-primary"
               >
                 {category.name}
@@ -218,7 +252,7 @@ const Navigation = () => {
                       onClick={() =>
                         navigate(
                           `/category/${category.slug}?category=${encodeURIComponent(
-                            sub.name.toUpperCase()
+                            `${category.name}/${sub.name}`
                           )}`
                         )
                       }
@@ -232,7 +266,7 @@ const Navigation = () => {
                         onClick={() =>
                           navigate(
                             `/category/${category.slug}?category=${encodeURIComponent(
-                              item.toUpperCase()
+                              `${category.name}/${sub.name}/${item}`
                             )}`
                           )
                         }

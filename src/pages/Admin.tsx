@@ -41,6 +41,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import {
+  flattenCategoryPaths,
+  useManagedCategories,
+} from "@/lib/category-management";
+import {
   useAdminProducts,
   useAdminUsers,
   useAllOrders,
@@ -157,6 +161,12 @@ const Admin = () => {
   const [imagePreview, setImagePreview] = useState("");
   const [imageInputKey, setImageInputKey] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+  const { categories: managedCategories, addCategory, removeCategory } =
+    useManagedCategories([]);
+  const categories = flattenCategoryPaths(managedCategories).sort((a, b) =>
+    a.localeCompare(b)
+  );
 
   const filteredOrders = useMemo(() => {
     let list = orders;
@@ -619,6 +629,55 @@ const Admin = () => {
           <TabsContent value="products" className="space-y-6">
             <Card>
               <CardHeader>
+                <CardTitle>Catégories du catalogue</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    value={newCategory}
+                    onChange={(event) => setNewCategory(event.target.value)}
+                    placeholder="Santé & Bien-être/Dermatologie"
+                    aria-label="Nouvelle catégorie ou sous-catégorie"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!newCategory.trim()) return;
+                      addCategory(newCategory);
+                      setNewCategory("");
+                    }}
+                  >
+                    Ajouter catégorie
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Utilisez <code>Catégorie/Sous-catégorie</code> pour créer une
+                  sous-catégorie. Les changements sont immédiatement visibles
+                  dans la navigation.
+                </p>
+                <div className="max-h-72 space-y-2 overflow-y-auto rounded-md border p-3">
+                  {categories.map((category) => (
+                    <div
+                      key={category}
+                      className="flex items-center justify-between gap-3 text-sm"
+                    >
+                      <span>{category}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive"
+                        onClick={() => removeCategory(category)}
+                      >
+                        Supprimer
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
                 <CardTitle>
                   {editingId ? "Modifier le produit" : "Ajouter un produit"}
                 </CardTitle>
@@ -670,12 +729,25 @@ const Admin = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="product-category">Catégorie *</Label>
-                    <Input
-                      id="product-category"
+                    <Select
                       value={form.category}
-                      onChange={(e) => setForm({ ...form, category: e.target.value })}
-                      placeholder="skincare"
-                    />
+                      onValueChange={(category) => setForm({ ...form, category })}
+                    >
+                      <SelectTrigger id="product-category">
+                        <SelectValue
+                          placeholder={
+                            "Sélectionner une catégorie"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="product-brand">Marque</Label>

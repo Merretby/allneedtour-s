@@ -3,6 +3,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useEffect } from "react";
 import {
   campaignsApi,
   cartApi,
@@ -199,6 +200,92 @@ export function useAdminProducts(page = 1) {
   });
 }
 
+export function useAdminProductCategories() {
+  const { user } = useAuth();
+  const cacheKey = "admin-product-categories";
+  const cached = readAdminCategoryCache(cacheKey);
+
+  const query = useQuery({
+    queryKey: ["admin", "product-categories"],
+    queryFn: async () => {
+      const categories = new Set<string>();
+      let page = 1;
+      let totalPages = 1;
+
+      while (page <= totalPages) {
+        const result = await productsApi.list(
+          { page, limit: 100, pricing: "base" },
+          { auth: true }
+        );
+        result.data.forEach((product) => categories.add(product.category));
+        totalPages = result.pagination.totalPages;
+        page += 1;
+      }
+
+      return [...categories].sort((a, b) => a.localeCompare(b));
+    },
+    enabled: user?.role === "admin",
+    initialData: cached?.categories,
+    initialDataUpdatedAt: cached?.updatedAt,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    refetchOnMount: true,
+  });
+
+  useEffect(() => {
+    if (query.data) writeAdminCategoryCache(cacheKey, query.data);
+  }, [query.data]);
+
+  return query;
+}
+
+function readAdminCategoryCache(
+  key: string
+): { categories: string[]; updatedAt: number } | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const value = window.localStorage.getItem(key);
+    if (!value) return null;
+    const parsed = JSON.parse(value) as {
+      categories?: unknown;
+      updatedAt?: unknown;
+    };
+    if (
+      !Array.isArray(parsed.categories) ||
+      !parsed.categories.every((category) => typeof category === "string") ||
+      typeof parsed.updatedAt !== "number"
+    ) {
+      return null;
+    }
+    return { categories: parsed.categories, updatedAt: parsed.updatedAt };
+  } catch {
+    return null;
+  }
+}
+
+function writeAdminCategoryCache(key: string, categories: string[]) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(
+      key,
+      JSON.stringify({ categories, updatedAt: Date.now() })
+    );
+  } catch {
+    // Caching is an optimization; the API remains the source of truth.
+  }
+}
+
+function invalidateAdminProductCategories(
+  queryClient: ReturnType<typeof useQueryClient>
+) {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem("admin-product-categories");
+  }
+  queryClient.invalidateQueries({ queryKey: ["admin", "product-categories"] });
+}
+
 /* ------------------------------- campaigns ------------------------------- */
 
 export function useBlackFriday() {
@@ -262,6 +349,7 @@ export function useCreateProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      invalidateAdminProductCategories(queryClient);
     },
   });
 }
@@ -274,6 +362,7 @@ export function useUpdateProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      invalidateAdminProductCategories(queryClient);
     },
   });
 }
@@ -285,6 +374,7 @@ export function useDeleteProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      invalidateAdminProductCategories(queryClient);
     },
   });
 }
