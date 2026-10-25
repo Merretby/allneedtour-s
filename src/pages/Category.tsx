@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import TopBar from "@/components/TopBar";
@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import PriceFilter from "@/components/PriceFilter";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/lib/api/hooks";
 import { ApiError } from "@/lib/api/client";
@@ -115,7 +116,15 @@ const Category = () => {
     setPage(1);
   }, [slug]);
 
-  const products = data?.data ?? [];
+  const products = useMemo(() => data?.data ?? [], [data?.data]);
+  const [filteredProducts, setFilteredProducts] = useState(products);
+  const handleFilteredProducts = useCallback((nextProducts: typeof products) => {
+    setFilteredProducts(nextProducts);
+  }, []);
+
+  useEffect(() => {
+    setFilteredProducts(products);
+  }, [products]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,10 +144,27 @@ const Category = () => {
         )}
 
         {!isLoading && !isError && products.length > 0 && (
+          <>
+            <PriceFilter
+              products={products}
+              onChange={handleFilteredProducts}
+            />
+          </>
+        )}
+
+        {!isLoading && !isError && filteredProducts.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
+          </div>
+        )}
+
+        {!isLoading && !isError && products.length > 0 && filteredProducts.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground">
+              Aucun produit ne correspond à cette fourchette de prix.
+            </p>
           </div>
         )}
 

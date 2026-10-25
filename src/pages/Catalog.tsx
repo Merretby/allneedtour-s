@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import PriceFilter from "@/components/PriceFilter";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/lib/api/hooks";
 import { ApiError } from "@/lib/api/client";
@@ -13,11 +14,15 @@ const Catalog = () => {
   const productsQuery = useProducts({ page, limit: 100 });
   const { data, isLoading, isError } = productsQuery;
   const products = data?.data ?? [];
+  const [filteredProducts, setFilteredProducts] = useState(products);
   const pagination = data?.pagination;
   const errorMessage =
     productsQuery.error instanceof ApiError
       ? productsQuery.error.message
       : "Vérifiez que l'API est démarrée.";
+  const handleFilteredProducts = useCallback((nextProducts: typeof products) => {
+    setFilteredProducts(nextProducts);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -52,11 +57,24 @@ const Catalog = () => {
         )}
 
         {!isLoading && !isError && products.length > 0 && (
+          <PriceFilter
+            products={products}
+            onChange={handleFilteredProducts}
+          />
+        )}
+
+        {!isLoading && !isError && filteredProducts.length > 0 && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
+        )}
+
+        {!isLoading && !isError && products.length > 0 && filteredProducts.length === 0 && (
+          <p className="py-16 text-center text-muted-foreground">
+            Aucun produit ne correspond à cette fourchette de prix.
+          </p>
         )}
 
         {pagination && pagination.totalPages > 1 && (
