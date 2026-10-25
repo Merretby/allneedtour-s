@@ -52,28 +52,23 @@ export class ProductsRepository {
     limit: number,
     offset: number,
     category?: string,
-    search?: string
+    search?: string,
+    minPrice?: number,
+    maxPrice?: number
   ): Promise<{ products: Product[]; total: number }> {
     let query = supabase.from('products').select('*', { count: 'exact' });
 
     if (category) {
-      const categories = category
-        .split(',')
-        .map((value) => value.trim())
-        .filter(Boolean);
-      if (categories.length === 1) {
-        query = query.eq('category', categories[0]);
-      } else if (categories.length > 1) {
-        query = query.in('category', categories);
-      }
+      const categories = category.split(',').map((value) => value.trim()).filter(Boolean);
+      if (categories.length === 1) query = query.eq('category', categories[0]);
+      else if (categories.length > 1) query = query.in('category', categories);
     }
-
     if (search) {
       const term = search.replace(/[%_,]/g, ' ').trim();
-      if (term) {
-        query = query.or(`name.ilike.%${term}%,brand.ilike.%${term}%,category.ilike.%${term}%`);
-      }
+      if (term) query = query.or(`name.ilike.%${term}%,brand.ilike.%${term}%,category.ilike.%${term}%`);
     }
+    if (minPrice !== undefined) query = query.gte('price', minPrice);
+    if (maxPrice !== undefined) query = query.lte('price', maxPrice);
 
     const { data: products, count, error } = await query.range(offset, offset + limit - 1);
 
@@ -83,6 +78,37 @@ export class ProductsRepository {
       products: products || [],
       total: count || 0,
     };
+  }
+
+  async findPriceBounds(
+    category?: string,
+    search?: string
+  ): Promise<{ min: number; max: number }> {
+    const findPrice = async (ascending: boolean) => {
+      let query = supabase
+        .from('products')
+        .select('price')
+        .order('price', { ascending })
+        .limit(1);
+      if (category) {
+        const categories = category.split(',').map((value) => value.trim()).filter(Boolean);
+        if (categories.length === 1) query = query.eq('category', categories[0]);
+        else if (categories.length > 1) query = query.in('category', categories);
+      }
+      if (search) {
+        const term = search.replace(/[%_,]/g, ' ').trim();
+        if (term) query = query.or(`name.ilike.%${term}%,brand.ilike.%${term}%,category.ilike.%${term}%`);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return Number(data?.[0]?.price ?? 0);
+    };
+
+    const [min, max] = await Promise.all([
+      findPrice(true),
+      findPrice(false),
+    ]);
+    return { min, max };
   }
 
   async create(input: CreateProductInput): Promise<Product> {

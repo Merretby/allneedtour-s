@@ -140,6 +140,7 @@ export interface Pagination {
 export interface Paginated<T> {
   data: T[];
   pagination: Pagination;
+  priceRange?: { min: number; max: number };
 }
 
 export interface AuthResponse {

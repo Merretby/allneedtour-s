@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import TopBar from "@/components/TopBar";
@@ -29,6 +29,20 @@ const categoryNames: Record<string, string> = {
 };
 
 const categoryAliases: Record<string, string> = {
+  "À -25%": "LES BONS DEALS",
+  "PETITS PRIX": "LES BONS DEALS",
+  "COFFRETS CADEAUX": "COFFRETS",
+  "CARTES-CADEAUX": "COFFRETS",
+  "JEUX CONCOURS": "PROMOTIONS DIVERSES",
+  "ÉVÉNEMENTS SPÉCIAUX": "PROMOTIONS DIVERSES",
+  "SÉRUMS CORÉENS": "PRODUITS COREENS",
+  "MASQUES TISSU": "MASQUES ET CREMES",
+  "MASQUES CRÈME": "MASQUES ET CREMES",
+  "ROUTINE CORÉENNE": "PRODUITS COREENS",
+  "DOUBLE NETTOYAGE": "DEMAQUILLANTS ET NETTOYANTS",
+  "MARQUES K-BEAUTY": "PRODUITS COREENS",
+  ESSENCE: "SERUMS ET HUILES",
+  CICA: "SOINS HYDRATANTS",
   "PROTÉINES": "PROTÉINES",
   "COMPLÉMENTS SPORTIFS": "COMPLÉMENTS SPORTIFS",
   "NUTRITION SPORTIVE": "NUTRITION SPORT",
@@ -40,6 +54,10 @@ const categoryAliases: Record<string, string> = {
   "CONTOUR DES YEUX": "SOINS CONTOURS YEUX",
   "MASQUES": "MASQUES ET CREMES",
   "NETTOYANTS": "DEMAQUILLANTS ET NETTOYANTS",
+  "NETTOYANTS VISAGE": "DEMAQUILLANTS ET NETTOYANTS",
+  "ANTI-ÂGE": "SOINS ANTI AGE",
+  "ANTI-IMPERFECTIONS": "SOINS ANTI IMPERFECTIONS",
+  HYDRATATION: "SOINS HYDRATANTS",
   "SOINS CIBLÉS": "SOINS ANTI IMPERFECTIONS",
   "SOLAIRE VISAGE": "CREMES SOLAIRES",
   "SHAMPOOING": "SHAMPOINGS USAGE FREQUENT",
@@ -90,21 +108,27 @@ const Category = () => {
   const [searchParams] = useSearchParams();
   const categoryName = categoryNames[slug || ""] || "Produits";
   const requestedCategory = searchParams.get("category");
+  const requestedLabel = requestedCategory?.split("/").pop()?.trim();
   const exactCategory = requestedCategory
-    ? requestedCategory.includes("/")
-      ? requestedCategory
-      : categoryAliases[requestedCategory.toUpperCase()] ??
-        (categoryFilter[slug || ""] ? undefined : requestedCategory)
+    ? requestedLabel && categoryAliases[requestedLabel.toUpperCase()]
+      ? categoryAliases[requestedLabel.toUpperCase()]
+      : requestedCategory.includes("/")
+        ? categoryFilter[slug || ""]?.join(",")
+        : categoryAliases[requestedCategory.toUpperCase()] ??
+          (categoryFilter[slug || ""] ? undefined : requestedCategory)
     : undefined;
   const backendCategory =
     exactCategory ||
     (slug ? categoryFilter[slug]?.join(",") : undefined);
   const [page, setPage] = useState(1);
+  const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
 
   const productsQuery = useProducts({
     category: backendCategory,
     page,
     limit: 100,
+    minPrice: priceRange?.[0],
+    maxPrice: priceRange?.[1],
   });
   const { data, isLoading, isError } = productsQuery;
   const errorMessage =
@@ -114,17 +138,16 @@ const Category = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [slug]);
+    setPriceRange(null);
+  }, [slug, backendCategory]);
 
   const products = useMemo(() => data?.data ?? [], [data?.data]);
-  const [filteredProducts, setFilteredProducts] = useState(products);
-  const handleFilteredProducts = useCallback((nextProducts: typeof products) => {
-    setFilteredProducts(nextProducts);
-  }, []);
+  const bounds = data?.priceRange;
 
   useEffect(() => {
-    setFilteredProducts(products);
-  }, [products]);
+    if (!bounds) return;
+    setPriceRange((current) => current ?? [Math.floor(bounds.min), Math.ceil(bounds.max)]);
+  }, [bounds]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -144,27 +167,22 @@ const Category = () => {
         )}
 
         {!isLoading && !isError && products.length > 0 && (
-          <>
-            <PriceFilter
-              products={products}
-              onChange={handleFilteredProducts}
-            />
-          </>
+          <PriceFilter
+            min={Math.floor(bounds?.min ?? 0)}
+            max={Math.ceil(bounds?.max ?? 0)}
+            value={priceRange ?? [Math.floor(bounds?.min ?? 0), Math.ceil(bounds?.max ?? 0)]}
+            onChange={(nextRange) => {
+              setPriceRange(nextRange);
+              setPage(1);
+            }}
+          />
         )}
 
-        {!isLoading && !isError && filteredProducts.length > 0 && (
+        {!isLoading && !isError && products.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
-          </div>
-        )}
-
-        {!isLoading && !isError && products.length > 0 && filteredProducts.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground">
-              Aucun produit ne correspond à cette fourchette de prix.
-            </p>
           </div>
         )}
 

@@ -19,6 +19,8 @@ interface ProductListParams {
   limit?: number;
   category?: string;
   search?: string;
+  minPrice?: number;
+  maxPrice?: number;
   pricing?: "base";
 }
 

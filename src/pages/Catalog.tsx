@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
@@ -11,18 +11,26 @@ import { ApiError } from "@/lib/api/client";
 
 const Catalog = () => {
   const [page, setPage] = useState(1);
-  const productsQuery = useProducts({ page, limit: 100 });
+  const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
+  const productsQuery = useProducts({
+    page,
+    limit: 100,
+    minPrice: priceRange?.[0],
+    maxPrice: priceRange?.[1],
+  });
   const { data, isLoading, isError } = productsQuery;
   const products = data?.data ?? [];
-  const [filteredProducts, setFilteredProducts] = useState(products);
   const pagination = data?.pagination;
   const errorMessage =
     productsQuery.error instanceof ApiError
       ? productsQuery.error.message
       : "Vérifiez que l'API est démarrée.";
-  const handleFilteredProducts = useCallback((nextProducts: typeof products) => {
-    setFilteredProducts(nextProducts);
-  }, []);
+  const bounds = data?.priceRange;
+
+  useEffect(() => {
+    if (!bounds) return;
+    setPriceRange((current) => current ?? [Math.floor(bounds.min), Math.ceil(bounds.max)]);
+  }, [bounds]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,23 +66,22 @@ const Catalog = () => {
 
         {!isLoading && !isError && products.length > 0 && (
           <PriceFilter
-            products={products}
-            onChange={handleFilteredProducts}
+            min={Math.floor(bounds?.min ?? 0)}
+            max={Math.ceil(bounds?.max ?? 0)}
+            value={priceRange ?? [Math.floor(bounds?.min ?? 0), Math.ceil(bounds?.max ?? 0)]}
+            onChange={(nextRange) => {
+              setPriceRange(nextRange);
+              setPage(1);
+            }}
           />
         )}
 
-        {!isLoading && !isError && filteredProducts.length > 0 && (
+        {!isLoading && !isError && products.length > 0 && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-        )}
-
-        {!isLoading && !isError && products.length > 0 && filteredProducts.length === 0 && (
-          <p className="py-16 text-center text-muted-foreground">
-            Aucun produit ne correspond à cette fourchette de prix.
-          </p>
         )}
 
         {pagination && pagination.totalPages > 1 && (

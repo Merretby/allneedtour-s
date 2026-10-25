@@ -25,25 +25,37 @@ export class ProductsService {
   }
 
   async getProducts(
-    params: PaginationParams & { category?: string; search?: string; basePricing?: boolean }
+    params: PaginationParams & {
+      category?: string;
+      search?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      basePricing?: boolean;
+    }
   ) {
     const { page, limit, offset } = calculatePagination(params);
-    const { products, total } = await this.repository.findAll(
+    const [{ products, total }, priceRange] = await Promise.all([
+      this.repository.findAll(
       limit,
       offset,
       params.category,
-      params.search
-    );
+      params.search,
+      params.minPrice,
+      params.maxPrice
+      ),
+      this.repository.findPriceBounds(params.category, params.search),
+    ]);
     const result = createPaginatedResult(products, total, page, limit);
+    const resultWithPriceRange = { ...result, priceRange };
 
-    if (params.basePricing) return result;
+    if (params.basePricing) return resultWithPriceRange;
 
     const promoMap = await this.campaignsRepository.getActivePromoMap();
-    if (promoMap.size === 0) return result;
+    if (promoMap.size === 0) return resultWithPriceRange;
 
     return {
-      ...result,
-      data: result.data.map((product) => applyCampaignPricing(product, promoMap)),
+      ...resultWithPriceRange,
+      data: resultWithPriceRange.data.map((product) => applyCampaignPricing(product, promoMap)),
     };
   }
 

@@ -39,6 +39,8 @@ export class ProductsController {
         limit?: string;
         category?: string;
         search?: string;
+        minPrice?: string;
+        maxPrice?: string;
         pricing?: string;
       };
     }>,
@@ -51,6 +53,8 @@ export class ProductsController {
       limit,
       category: request.query.category,
       search: request.query.search,
+      minPrice: request.query.minPrice ? Number(request.query.minPrice) : undefined,
+      maxPrice: request.query.maxPrice ? Number(request.query.maxPrice) : undefined,
       basePricing: this.wantsBasePricing(request),
     });
     sendSuccess(reply, result);
